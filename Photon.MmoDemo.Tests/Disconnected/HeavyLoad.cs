@@ -289,7 +289,7 @@ namespace Photon.MmoDemo.Tests.Disconnected
                         var client = new Client(name);
 
                         client.ResetEvent();                        
-                        EnterWorldBegin(client, world, new Vector(x / 100f, y / 100f, 0f));
+                        EnterWorldBegin(client, world, new Vector(x / 100f, y / 100f));
                         // ...
 
                         clients.Add(client);

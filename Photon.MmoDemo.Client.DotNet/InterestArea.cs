@@ -109,7 +109,7 @@ namespace Photon.MmoDemo.Client
 
         public void ResetViewDistance()
         {
-			this.SetViewDistance(this.game.WorldData.TileDimensions / 2 + new Vector(1, 1, 0));
+			this.SetViewDistance(this.game.WorldData.TileDimensions / 2 + new Vector(1, 1));
 //            this.SetViewDistance(this.game.WorldData.TileDimensions * 0.75f);
         }
 

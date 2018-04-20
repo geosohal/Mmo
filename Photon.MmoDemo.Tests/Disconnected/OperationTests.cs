@@ -33,7 +33,7 @@ namespace Photon.MmoDemo.Tests.Disconnected
                     new Vector(1f, 1f),
                     new Vector(10f, 10f)
                 ),
-                new Vector(1f, 1f, 0f),
+                new Vector(1f, 1f),
                 out world);
         }
 
@@ -63,7 +63,7 @@ namespace Photon.MmoDemo.Tests.Disconnected
             using (var client = new Client("Test"))
             {
                 client.ResetEvent();
-                client.SendOperation(Operations.CreateWorld("CreateWorld", new BoundingBox(new Vector(0f, 0f, 0f), new Vector(10f, 10f, 0f)), new Vector(1f, 1f, 0f)));
+                client.SendOperation(Operations.CreateWorld("CreateWorld", new BoundingBox(new Vector(0f, 0f), new Vector(10f, 10f)), new Vector(1f, 1f)));
                 client.BeginReceiveResponse();
                 OperationResponse data;
                 Assert.IsTrue(client.EndReceiveResponse(Settings.WaitTime, out data), "Response not received"); // blocking
@@ -71,7 +71,7 @@ namespace Photon.MmoDemo.Tests.Disconnected
 
                 // "Test" defined in setup
                 client.ResetEvent();
-                client.SendOperation(Operations.CreateWorld("TestWorld", new BoundingBox(new Vector(0f, 0f, 0f), new Vector(10f, 10f, 0f)), new Vector(1f, 1f, 0f)));
+                client.SendOperation(Operations.CreateWorld("TestWorld", new BoundingBox(new Vector(0f, 0f), new Vector(10f, 10f)), new Vector(1f, 1f)));
                 client.BeginReceiveResponse();
                 Assert.IsTrue(client.EndReceiveResponse(Settings.WaitTime, out data), "Response not received"); // blocking
                 Assert.AreEqual(data.ReturnCode, (byte)ReturnCode.WorldAlreadyExists);
@@ -103,7 +103,7 @@ namespace Photon.MmoDemo.Tests.Disconnected
         {
             using (var client = new Client("Test"))
             {
-                EnterWorld(client, "TestWorld", new Vector(1f, 1f, 0f), new Vector(1f, 1f, 0f), new Vector(2f, 2f, 0f), null);
+                EnterWorld(client, "TestWorld", new Vector(1f, 1f), new Vector(1f, 1f), new Vector(2f, 2f), null);
 
                 client.ResetEvent();
                 client.SendOperation(Operations.DetachCamera());
@@ -120,15 +120,15 @@ namespace Photon.MmoDemo.Tests.Disconnected
         {
             using (var client = new Client("Test"))
             {
-                EnterWorld(client, "TestWorld", new Vector(1f, 1f, 0f), new Vector(1f, 1f, 0f), new Vector(2f, 2f, 0f), null);
+                EnterWorld(client, "TestWorld", new Vector(1f, 1f), new Vector(1f, 1f), new Vector(2f, 2f), null);
                 
                 client.ResetEvent();
-                client.SendOperation(Operations.EnterWorld("TestWorld", client.Username, null, new Vector(1f, 1f, 0f), new Vector(1f, 1f, 0f), new Vector(2f, 2f, 0f)));
+                client.SendOperation(Operations.EnterWorld("TestWorld", client.Username, null, new Vector(1f, 1f), new Vector(1f, 1f), new Vector(2f, 2f)));
                 ReceiveOperationResponse(client, ReturnCode.InvalidOperation); // blocking
 
                 using (var client2 = new Client("Test"))
                 {
-                    EnterWorld(client2, "TestWorld", new Vector(1f, 1f, 0f), new Vector(1f, 1f, 0f), new Vector(2f, 2f, 0f), null);
+                    EnterWorld(client2, "TestWorld", new Vector(1f, 1f), new Vector(1f, 1f), new Vector(2f, 2f), null);
 
                     EventData @event;
                     client.ResetEvent();
@@ -150,7 +150,7 @@ namespace Photon.MmoDemo.Tests.Disconnected
                 client.SendOperation(Operations.ExitWorld());
                 ReceiveOperationResponse(client, ReturnCode.InvalidOperation); // blocking
 
-                EnterWorld(client, "TestWorld", new Vector(1f, 1f, 0f), new Vector(1f, 1f, 0f), new Vector(2f, 2f, 0f), null);
+                EnterWorld(client, "TestWorld", new Vector(1f, 1f), new Vector(1f, 1f), new Vector(2f, 2f), null);
                 ExitWorld(client);
             }
         }
@@ -160,10 +160,10 @@ namespace Photon.MmoDemo.Tests.Disconnected
         {
             using (var client = new Client("Test"))
             {
-                EnterWorld(client, "TestWorld", new Vector(1f, 1f, 0f), new Vector(1f, 1f, 0f), new Vector(2f, 2f, 0f), null);
+                EnterWorld(client, "TestWorld", new Vector(1f, 1f), new Vector(1f, 1f), new Vector(2f, 2f), null);
 
                 client.ResetEvent();
-                client.SendOperation(Operations.Move(null, new Vector(1f, 2f, 0f)));
+                client.SendOperation(Operations.Move(null, new Vector(1f, 2f)));
                 NotReceiveOperationResponse(client); // blocking
             }
         }
@@ -173,7 +173,7 @@ namespace Photon.MmoDemo.Tests.Disconnected
         {
             using (var client = new Client("Test"))
             {
-                EnterWorld(client, "TestWorld", new Vector(1f, 1f, 0f), new Vector(1f, 1f, 0f), new Vector(2f, 2f, 0f), null);
+                EnterWorld(client, "TestWorld", new Vector(1f, 1f), new Vector(1f, 1f), new Vector(2f, 2f), null);
 
                 client.ResetEvent();
                 client.SendOperation(Operations.SetProperties(null, new Hashtable { { "Key", "Value" } }, null));
@@ -186,10 +186,10 @@ namespace Photon.MmoDemo.Tests.Disconnected
         {
             using (var client = new Client("Test"))
             {
-                EnterWorld(client, "TestWorld", new Vector( 1f, 1f, 0f), new Vector( 1f, 1f, 0f), new Vector( 2f, 2f, 0f), null);
+                EnterWorld(client, "TestWorld", new Vector( 1f, 1f), new Vector( 1f, 1f), new Vector( 2f, 2f), null);
 
                 client.ResetEvent();
-                client.SendOperation(Operations.SetViewDistance(new Vector(2f, 2f, 0f), new Vector( 3f, 3f, 0f)));
+                client.SendOperation(Operations.SetViewDistance(new Vector(2f, 2f), new Vector( 3f, 3f)));
                 NotReceiveOperationResponse(client); // blocking
             }
         }
@@ -208,13 +208,13 @@ namespace Photon.MmoDemo.Tests.Disconnected
         {
             using (var client = new Client("Test"))
             {              
-                EnterWorld(client, "TestWorld", new Vector(1f, 1f, 0f), new Vector(1f, 1f, 0f), new Vector(2f, 2f, 0f), null);
+                EnterWorld(client, "TestWorld", new Vector(1f, 1f), new Vector(1f, 1f), new Vector(2f, 2f), null);
 
                 var myItemId = "MyItem";
 
                 // spawn item out of interest area
                 client.ResetEvent();
-                client.SendOperation(Operations.SpawnItem(myItemId, ItemType.Bot, new Vector(3f, 3f, 0f), null, true));
+                client.SendOperation(Operations.SpawnItem(myItemId, ItemType.Bot, new Vector(3f, 3f), null, true));
                 OperationResponse spawnData = ReceiveOperationResponse(client); // blocking
                 Assert.AreEqual(spawnData.ReturnCode, (int)ReturnCode.Ok, "SpawnItem op error:" + spawnData.ReturnCode + " " + spawnData.DebugMessage);
 
@@ -228,7 +228,7 @@ namespace Photon.MmoDemo.Tests.Disconnected
                 Console.WriteLine("Unsubscribing...");
                 
                 client.ResetEvent();
-                client.SendOperation(Operations.Move(myItemId, new Vector(3f, 3.3f, 0f)));
+                client.SendOperation(Operations.Move(myItemId, new Vector(3f, 3.3f)));
                 Func<EventData, bool> checkMoveAction = d => (string)d.Parameters[(byte)ParameterCode.ItemId] == myItemId;
                 client.BeginReceiveEvent(EventCode.ItemMoved, checkMoveAction);
                 Assert.IsTrue(client.EndReceiveEvent(Settings.WaitTime, out data), "Event not received");// blocking
@@ -245,7 +245,7 @@ namespace Photon.MmoDemo.Tests.Disconnected
 
                 // check if unsubscription worked
                 client.ResetEvent();
-                client.SendOperation(Operations.Move(null, new Vector(1f, 2f, 0f)));
+                client.SendOperation(Operations.Move(null, new Vector(1f, 2f)));
                 client.BeginReceiveEvent(EventCode.ItemMoved, checkMoveAction);
                 Assert.IsFalse(client.EndReceiveEvent(Settings.WaitTime, out data), "Event received"); // blocking
             }
@@ -305,22 +305,22 @@ namespace Photon.MmoDemo.Tests.Disconnected
 
         private static void SpawnItem(Client client)
         {
-            EnterWorld(client, "TestWorld", new Vector(1f, 1f, 0f), new Vector(1f, 1f, 0f), new Vector(2f, 2f, 0f), null);
+            EnterWorld(client, "TestWorld", new Vector(1f, 1f), new Vector(1f, 1f), new Vector(2f, 2f), null);
 
             client.ResetEvent();
-            client.SendOperation(Operations.SpawnItem("MyItem", ItemType.Bot, new Vector(1f, 1f, 0f), null, true));
+            client.SendOperation(Operations.SpawnItem("MyItem", ItemType.Bot, new Vector(1f, 1f), null, true));
             OperationResponse data = ReceiveOperationResponse(client); // blocking
 
             Assert.AreEqual(data.ReturnCode, (int)ReturnCode.Ok, "SpawnItem op error:" + data.ReturnCode + " " + data.DebugMessage);
             
             // move item to view area            
             client.ResetEvent();
-            client.SendOperation(Operations.Move("MyItem", new Vector(1f, 1f, 0f)));
+            client.SendOperation(Operations.Move("MyItem", new Vector(1f, 1f)));
             NotReceiveOperationResponse(client); // blocking
 
             // test not existing item move 
             client.ResetEvent();
-            client.SendOperation(Operations.Move("NotExistsing", new Vector(1f, 1f, 0f)));
+            client.SendOperation(Operations.Move("NotExistsing", new Vector(1f, 1f)));
             ReceiveOperationResponse(client, ReturnCode.ItemNotFound); // blocking
 
         }

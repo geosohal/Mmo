@@ -107,7 +107,7 @@ namespace Photon.MmoDemo.Server
             this.id = id;
             this.world = world;
             this.type = type;
-            this.Velocity = new Vector(0, 0, 0);
+            this.Velocity = new Vector(0, 0);
         }
 
         //public Item(Vector position, Vector rotation, Hashtable properties, MmoActorOperationHandler owner,

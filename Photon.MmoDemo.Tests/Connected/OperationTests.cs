@@ -33,7 +33,7 @@ namespace Photon.MmoDemo.Tests.Connected
             {
                 Assert.IsTrue(client.Connect());
                 CreateWorld("TestWorld", client);
-                EnterWorld(client, "TestWorld", new Vector(1f, 1f, 0f), new Vector(1f, 1f, 0f), new Vector(2f, 2f, 0f), null);
+                EnterWorld(client, "TestWorld", new Vector(1f, 1f), new Vector(1f, 1f), new Vector(2f, 2f), null);
 
                 SpawnItem(client);
 
@@ -69,7 +69,7 @@ namespace Photon.MmoDemo.Tests.Connected
                 CreateWorld("CreateWorld", client);
 
                 // "Test" defined in setup
-                Operations.CreateWorld(client, "CreateWorld", new BoundingBox(new Vector(0f, 0f, 0f), new Vector(10f, 10f, 0f)), new Vector(1f, 1f, 0f));
+                Operations.CreateWorld(client, "CreateWorld", new BoundingBox(new Vector(0f, 0f), new Vector(10f, 10f)), new Vector(1f, 1f));
 
                 Func<OperationResponse, bool> checkAction = d => d.OperationCode == (byte)OperationCode.CreateWorld;
                 client.BeginReceiveResponse(10);
@@ -88,7 +88,7 @@ namespace Photon.MmoDemo.Tests.Connected
             {
                 Assert.IsTrue(client.Connect());
                 CreateWorld("TestWorld", client);
-                EnterWorld(client, "TestWorld", new Vector(1f, 1f, 0f), new Vector(1f, 1f, 0f), new Vector(2f, 2f, 0f), null);
+                EnterWorld(client, "TestWorld", new Vector(1f, 1f), new Vector(1f, 1f), new Vector(2f, 2f), null);
                 SpawnItem(client);
                 Operations.DestroyItem(client, "MyItem");
 
@@ -109,7 +109,7 @@ namespace Photon.MmoDemo.Tests.Connected
             {
                 Assert.IsTrue(client.Connect());
                 CreateWorld("TestWorld", client);
-                EnterWorld(client, "TestWorld", new Vector(1f, 1f, 0f), new Vector(1f, 1f, 0f), new Vector(2f, 2f, 0f), null);
+                EnterWorld(client, "TestWorld", new Vector(1f, 1f), new Vector(1f, 1f), new Vector(2f, 2f), null);
 
                 Operations.DetachCamera(client);
                 client.BeginReceiveResponse(0);
@@ -127,7 +127,7 @@ namespace Photon.MmoDemo.Tests.Connected
             {
                 Assert.IsTrue(client.Connect());
                 CreateWorld("TestWorld", client);
-                EnterWorld(client, "TestWorld", new Vector(1f, 1f, 0f), new Vector(1f, 1f, 0f), new Vector(2f, 2f, 0f), null);
+                EnterWorld(client, "TestWorld", new Vector(1f, 1f), new Vector(1f, 1f), new Vector(2f, 2f), null);
             }
         }
 
@@ -145,7 +145,7 @@ namespace Photon.MmoDemo.Tests.Connected
                 OperationResponse data;
                 Assert.IsTrue(client.EndReceiveResponse(Settings.WaitTime, out data), "Response not received");
                 Assert.AreEqual(data.ReturnCode, (byte)ReturnCode.InvalidOperation);
-                EnterWorld(client, "TestWorld", new Vector(1f, 1f, 0f), new Vector(1f, 1f, 0f), new Vector(2f, 2f, 0f), null);
+                EnterWorld(client, "TestWorld", new Vector(1f, 1f), new Vector(1f, 1f), new Vector(2f, 2f), null);
                 ExitWorld(client);
             }
         }
@@ -157,8 +157,8 @@ namespace Photon.MmoDemo.Tests.Connected
             {
                 Assert.IsTrue(client.Connect());
                 CreateWorld("TestWorld", client);
-                EnterWorld(client, "TestWorld", new Vector(1f, 1f, 0f), new Vector(1f, 1f, 0f), new Vector(2f, 2f, 0f), null);
-                Operations.Move(client, null, new Vector(1f, 2f, 0f));
+                EnterWorld(client, "TestWorld", new Vector(1f, 1f), new Vector(1f, 1f), new Vector(2f, 2f), null);
+                Operations.Move(client, null, new Vector(1f, 2f));
 
                 client.BeginReceiveResponse(0);
                 OperationResponse data;
@@ -173,7 +173,7 @@ namespace Photon.MmoDemo.Tests.Connected
             {
                 Assert.IsTrue(client.Connect());
                 CreateWorld("TestWorld", client);
-                EnterWorld(client, "TestWorld", new Vector(1f, 1f, 0f), new Vector(1f, 1f, 0f), new Vector(2f, 2f, 0f), null);
+                EnterWorld(client, "TestWorld", new Vector(1f, 1f), new Vector(1f, 1f), new Vector(2f, 2f), null);
 
                 Operations.SetProperties(client, null, new Hashtable { { "Key", "Value" } }, null);
 
@@ -190,9 +190,9 @@ namespace Photon.MmoDemo.Tests.Connected
             {
                 Assert.IsTrue(client.Connect());
                 CreateWorld("TestWorld", client);
-                EnterWorld(client, "TestWorld", new Vector(1f, 1f, 0f), new Vector(1f, 1f, 0f), new Vector(2f, 2f, 0f), null);
+                EnterWorld(client, "TestWorld", new Vector(1f, 1f), new Vector(1f, 1f), new Vector(2f, 2f), null);
 
-                Operations.SetViewDistance(client, new Vector(2f, 2f, 0f), new Vector(3f, 3f, 0f));
+                Operations.SetViewDistance(client, new Vector(2f, 2f), new Vector(3f, 3f));
 
                 client.BeginReceiveResponse(0);
                 OperationResponse data;
@@ -207,7 +207,7 @@ namespace Photon.MmoDemo.Tests.Connected
             {
                 Assert.IsTrue(client.Connect());
                 CreateWorld("TestWorld", client);
-                EnterWorld(client, "TestWorld", new Vector(1f, 1f, 0f), new Vector(1f, 1f, 0f), new Vector(2f, 2f, 0f), null);
+                EnterWorld(client, "TestWorld", new Vector(1f, 1f), new Vector(1f, 1f), new Vector(2f, 2f), null);
                 SpawnItem(client);
                 // check error on existing
                 SpawnItem(client, ReturnCode.ItemAlreadyExists);
@@ -223,7 +223,7 @@ namespace Photon.MmoDemo.Tests.Connected
 
                 Assert.IsTrue(client.Connect());
                 CreateWorld("TestWorld", client);
-                EnterWorld(client, "TestWorld", new Vector(1f, 1f, 0f), new Vector(1f, 1f, 0f), new Vector(2f, 2f, 0f), null);
+                EnterWorld(client, "TestWorld", new Vector(1f, 1f), new Vector(1f, 1f), new Vector(2f, 2f), null);
 
                 SpawnItem(client);
 
@@ -235,7 +235,7 @@ namespace Photon.MmoDemo.Tests.Connected
                 Assert.AreEqual(data.Code, (byte)EventCode.ItemSubscribed);
 
                 // check if subscription works
-                Operations.Move(client, myItemId, new Vector(3f, 3.3f, 0f));
+                Operations.Move(client, myItemId, new Vector(3f, 3.3f));
 
                 Func<EventData, bool> checkAction =
                     d => (string)d[(byte)ParameterCode.ItemId] == myItemId;
@@ -251,7 +251,7 @@ namespace Photon.MmoDemo.Tests.Connected
                 Assert.AreEqual(data.Code, (byte)EventCode.ItemUnsubscribed);
 
                 // check if unsubscription works
-                Operations.Move(client, null, new Vector(1f, 2f, 0f));
+                Operations.Move(client, null, new Vector(1f, 2f));
 
                 client.BeginReceiveEvent(EventCode.ItemMoved, checkAction, 0);
                 Assert.IsFalse(client.EndReceiveEvent(Settings.WaitTime, out data), "Event received");
@@ -264,7 +264,7 @@ namespace Photon.MmoDemo.Tests.Connected
 
         private static void CreateWorld(string world, Client client)
         {
-            Operations.CreateWorld(client, world, new BoundingBox(new Vector(0f, 0f, 0f), new Vector(10f, 10f, 0f)), new Vector(1f, 1f, 0f));
+            Operations.CreateWorld(client, world, new BoundingBox(new Vector(0f, 0f), new Vector(10f, 10f)), new Vector(1f, 1f));
 
             client.BeginReceiveResponse(0);
 
@@ -296,7 +296,7 @@ namespace Photon.MmoDemo.Tests.Connected
 
         private static void SpawnItem(Client client, ReturnCode result = ReturnCode.Ok)
         {
-            Operations.SpawnItem(client, "MyItem", byte.MaxValue, new Vector(1f, 1f, 0f), null, true);
+            Operations.SpawnItem(client, "MyItem", byte.MaxValue, new Vector(1f, 1f), null, true);
 
             Func<OperationResponse, bool> checkAction =
                 e => (string)e[(byte)ParameterCode.ItemId] == "MyItem";
@@ -309,7 +309,7 @@ namespace Photon.MmoDemo.Tests.Connected
             if (data.ReturnCode != (int)ReturnCode.Ok)
             {
                 Assert.AreEqual(ReturnCode.ItemAlreadyExists, (ReturnCode)data.ReturnCode);
-                Operations.Move(client, "MyItem", new Vector(1f, 1f, 0f));
+                Operations.Move(client, "MyItem", new Vector(1f, 1f));
             }
             else
             {

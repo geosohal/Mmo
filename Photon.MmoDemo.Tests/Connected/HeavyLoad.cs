@@ -44,7 +44,7 @@ namespace Photon.MmoDemo.Tests.Connected
             WorldCache.Instance.Clear();
             World world;
             WorldCache.Instance.TryCreate(
-                "HeavyLoad2", new BoundingBox( new Vector(0f, 0f), new Vector(100f, 100f)), new Vector(20f, 20f, 0f), out world);
+                "HeavyLoad2", new BoundingBox( new Vector(0f, 0f), new Vector(100f, 100f)), new Vector(20f, 20f), out world);
 
             using (var client = new Client(string.Empty))
             {
@@ -92,7 +92,7 @@ namespace Photon.MmoDemo.Tests.Connected
             WorldCache.Instance.Clear();
             World world;
             WorldCache.Instance.TryCreate(
-                "HeavyLoad3", new BoundingBox(new Vector(0f, 0f), new Vector(100f, 100f)), new Vector(20f, 20f, 0f), out world);
+                "HeavyLoad3", new BoundingBox(new Vector(0f, 0f), new Vector(100f, 100f)), new Vector(20f, 20f), out world);
 
             using (var client = new Client(string.Empty))
             {
@@ -181,8 +181,8 @@ namespace Photon.MmoDemo.Tests.Connected
 
         private static void EnterWorldBegin(Client client, World world)
         {
-            var viewDistanceEnter = new Vector(1f, 1f, 0f);
-            var viewDistanceExit = new Vector( 2f, 2f, 0f);
+            var viewDistanceEnter = new Vector(1f, 1f);
+            var viewDistanceExit = new Vector( 2f, 2f);
 
             ThreadPoolEnqueue(
                 client, 
@@ -274,7 +274,7 @@ namespace Photon.MmoDemo.Tests.Connected
                 for (int y = (int)(world.Area.Min.Y + (world.TileDimensions.Y / 2)); y < world.Area.Max.Y; y += (int)world.TileDimensions.Y)
                 {
                     string name = string.Format("MyUsername{0}/{1}", x, y);
-                    var client = new Client(name, new Vector( x / 100f, y / 100f, 0f));
+                    var client = new Client(name, new Vector( x / 100f, y / 100f));
                     client.BeginConnect();
                     clients.Add(client);
                     clientCount++;
@@ -283,7 +283,7 @@ namespace Photon.MmoDemo.Tests.Connected
                 for (int y = (int)(world.Area.Min.Y + (world.TileDimensions.Y / 2)) + 1; y < world.Area.Max.Y; y += (int)world.TileDimensions.Y)
                 {
                     string name = string.Format("MyUsername{0}/{1}", x + 1, y);
-                    var client = new Client(name, new Vector((x + 1) / 100f, y / 100f, 0f));
+                    var client = new Client(name, new Vector((x + 1) / 100f, y / 100f));
                     client.BeginConnect();
                     clients.Add(client);
                     clientCount++;

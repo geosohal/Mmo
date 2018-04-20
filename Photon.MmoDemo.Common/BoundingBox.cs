@@ -12,7 +12,7 @@ namespace Photon.MmoDemo.Common
     using System;
 
     /// <summary>
-    /// The 3D floating point bounding box.
+    /// The 2D floating point bounding box. - modified to be rectangle
     /// </summary>
     public struct BoundingBox
     {
@@ -55,7 +55,7 @@ namespace Photon.MmoDemo.Common
         public bool Contains(Vector point)
         {
             // not outside of box?
-            return (point.X < this.Min.X || point.X > this.Max.X || point.Y < this.Min.Y || point.Y > this.Max.Y || point.Z < this.Min.Z || point.Z > this.Max.Z) ==
+            return (point.X < this.Min.X || point.X > this.Max.X || point.Y < this.Min.Y || point.Y > this.Max.Y) ==
                    false;
         }
 
@@ -78,12 +78,12 @@ namespace Photon.MmoDemo.Common
 
         public bool IsValid()
         {
-            return (this.Max.X < this.Min.X || this.Max.Y < this.Min.Y || this.Max.Z < this.Min.Z) == false;
+            return (this.Max.X < this.Min.X || this.Max.Y < this.Min.Y ) == false;
         }
 
         public override string ToString()
         {
-            return string.Format("{0}({1},{2},{3})({4},{5},{6})", base.ToString(), Min.X, Min.Y, Min.Z, Max.X, Max.Y, Max.Z);
+            return string.Format("{0}({1},{2},{3})({4})", base.ToString(), Min.X, Min.Y, Max.X, Max.Y);
         }
     }
 }

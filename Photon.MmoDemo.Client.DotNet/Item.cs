@@ -186,9 +186,9 @@ namespace Photon.MmoDemo.Client
             OnMoved();
         }
 
-        public void SetRotation(float rotationX, float rotationY, float rotationZ)
+        public void SetRotation(float rotationX, float rotationY)
         {
-            Rotation = new Vector(rotationX, rotationY, rotationZ);
+            Rotation = new Vector(rotationX, rotationY);
         }
 
         public void SetRotation(Vector rotation)

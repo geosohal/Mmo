@@ -67,13 +67,12 @@ namespace Photon.MmoDemo.Common
             byte[] res = new byte[12];
             SerializeFloat(v.X, res, 0);
             SerializeFloat(v.Y, res, 4);
-            SerializeFloat(v.Z, res, 8);
             return res;
         }
 
         public static object DeserializeVector(byte[] data)
         {
-            return new Vector(DeserializeFloat(data, 0), DeserializeFloat(data, 4), DeserializeFloat(data, 8));
+            return new Vector(DeserializeFloat(data, 0), DeserializeFloat(data, 4));
         }
 
         public static byte[] SerializeBoundingBox(object x)
@@ -82,10 +81,8 @@ namespace Photon.MmoDemo.Common
             byte[] res = new byte[24];
             SerializeFloat(b.Min.X, res, 0);
             SerializeFloat(b.Min.Y, res, 4);
-            SerializeFloat(b.Min.Z, res, 8);
-            SerializeFloat(b.Max.X, res, 12);
-            SerializeFloat(b.Max.Y, res, 16);
-            SerializeFloat(b.Max.Z, res, 20);
+            SerializeFloat(b.Max.X, res, 8);
+            SerializeFloat(b.Max.Y, res, 12);
             return res;
         }
 
@@ -93,8 +90,8 @@ namespace Photon.MmoDemo.Common
         {
             return new BoundingBox
             {
-                Min = new Vector(DeserializeFloat(data, 0), DeserializeFloat(data, 4), DeserializeFloat(data, 8)),
-                Max = new Vector(DeserializeFloat(data, 12), DeserializeFloat(data, 16), DeserializeFloat(data, 20))
+                Min = new Vector(DeserializeFloat(data, 0), DeserializeFloat(data, 4)),
+                Max = new Vector(DeserializeFloat(data, 8), DeserializeFloat(data, 12))
             };
         }
 
