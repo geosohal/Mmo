@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Photon.MmoDemo.Common</name>
+    </assembly>
+    <members>
+        <member name="T:Photon.MmoDemo.Common.BoundingBox">
+            <summary>
+            The 3D floating point bounding box.
+            </summary>
+        </member>
+        <!-- Badly formed XML comment ignored for member "T:Photon.MmoDemo.Common.EventCode" -->
+        <member name="T:Photon.MmoDemo.Common.EventReceiver">
+            <summary>
+            All known event receivers.
+            Used for operation RaiseGenericEvent/>.
+            </summary>
+        </member>
+        <!-- Badly formed XML comment ignored for member "T:Photon.MmoDemo.Common.ItemType" -->
+        <!-- Badly formed XML comment ignored for member "T:Photon.MmoDemo.Common.OperationCode" -->
+        <!-- Badly formed XML comment ignored for member "T:Photon.MmoDemo.Common.ParameterCode" -->
+        <member name="T:Photon.MmoDemo.Common.Protocol">
+            <summary>
+            (De)serialization procedures used in server and client.
+            </summary>
+        </member>
+        <!-- Badly formed XML comment ignored for member "T:Photon.MmoDemo.Common.ReturnCode" -->
+        <member name="T:Photon.MmoDemo.Common.Vector">
+            <summary>
+            The 3D floating point vector.
+            </summary>
+        </member>
+    </members>
+</doc>
