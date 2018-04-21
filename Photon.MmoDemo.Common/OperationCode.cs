@@ -61,7 +61,9 @@ namespace Photon.MmoDemo.Common
 
         FireBullet = 111,
 
-        VelocityRotation = 112
+        VelocityRotation = 112,
+
+        Breaks = 113
 
 
     }

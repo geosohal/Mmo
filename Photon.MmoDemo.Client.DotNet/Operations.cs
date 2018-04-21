@@ -143,6 +143,15 @@ namespace Photon.MmoDemo.Client
             game.SendOperation(OperationCode.VelocityRotation, data, sendReliable, Settings.ItemChannel);
         }
 
+        public static void Break(Game game, string itemId, bool sendReliable)
+        {
+            var data = new Dictionary<byte, object>();
+            if (itemId != null)
+                data.Add((byte)ParameterCode.ItemId, itemId);
+            game.SendOperation(OperationCode.Breaks, data, sendReliable, Settings.ItemChannel);
+
+        }
+
         // todo: probably want to add playerid here to avoid friendly fire
         public static void FireLaser(Game game, Vector position, Vector rotation, bool sendReliable)
         {

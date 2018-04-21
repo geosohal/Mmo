@@ -76,6 +76,12 @@ namespace Photon.MmoDemo.Client
             return true;
         }
 
+        public bool ApplyBreak()
+        {
+            Operations.Break(this.Game, this.Id, this.Game.Settings.SendReliable);
+            return true;
+        }
+
         public bool MoveRelative(Vector offset, Vector rotation)
         {
             return this.MoveAbsolute(this.Position + offset, rotation);

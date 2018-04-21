@@ -980,7 +980,10 @@ namespace Photon.MmoDemo.Server
                     return InvalidOperation(operationRequest);
                 case OperationCode.VelocityRotation:
                     return OperationVelocityRot(peer, operationRequest, sendParameters);
-
+                case OperationCode.Breaks:
+                    log.InfoFormat("applying breaks");
+                    Avatar.Velocity = Avatar.Velocity * GlobalVars.breaksDampFactor;
+                    return new OperationResponse(operationRequest.OperationCode);
             }
 
             return new OperationResponse(operationRequest.OperationCode)

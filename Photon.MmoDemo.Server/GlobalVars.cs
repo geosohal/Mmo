@@ -31,5 +31,7 @@ namespace Photon.MmoDemo.Server
         public static int megaMaxVel = 400;
         public static int megaMaxVelSq = 160000;
         public static int megaFadePerSec = 65;
+
+        public static float breaksDampFactor = .6f;
     }
 }
