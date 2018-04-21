@@ -75,7 +75,9 @@ namespace Photon.MmoDemo.Common
         VelX = 120,
         VelY = 121,
 
-        Velocity = 122
+        Velocity = 122,
+
+        IsMegaThrust = 123
 
 
 

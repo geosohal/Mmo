@@ -63,7 +63,7 @@ namespace Photon.MmoDemo.Client
             return true;
         }
 
-        public bool VelocityRotation(Vector vel, Vector? rot)
+        public bool VelocityRotation(Vector vel, Vector? rot, bool isMegaThrust)
         {
             if (!this.Game.WorldData.BoundingBox.Contains2d(Position+vel*.051f))
             {
@@ -72,7 +72,7 @@ namespace Photon.MmoDemo.Client
             }
             this.Velocity = vel;
           //  this.SetPositions(Position + vel * .05f, Position, (Vector)rot, Rotation);
-            Operations.VelocityRot(this.Game, this.Id, vel, rot, this.Game.Settings.SendReliable);
+            Operations.VelocityRot(this.Game, this.Id, vel, rot, isMegaThrust, this.Game.Settings.SendReliable);
             return true;
         }
 

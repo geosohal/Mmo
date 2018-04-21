@@ -25,5 +25,11 @@ namespace Photon.MmoDemo.Server
         public static float playerShipRadius2 = 460f;    // radius squared
         public static int bulletDamage = 8;
         public static int playerHitPoints = 100;    // also in clientside ItemBehavior
+
+        public static int maxShipVel = 180;
+        public static int maxShipVelSq = 32400;
+        public static int megaMaxVel = 400;
+        public static int megaMaxVelSq = 160000;
+        public static int megaFadePerSec = 65;
     }
 }

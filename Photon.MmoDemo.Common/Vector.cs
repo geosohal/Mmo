@@ -81,6 +81,17 @@ namespace Photon.MmoDemo.Common
             return new Vector {X = Math.Min(value1.X, value2.X), Y = Math.Min(value1.Y, value2.Y)};
         }
 
+        public static Vector Normalized(Vector vec)
+        {
+            float len = (float)Math.Sqrt(vec.Len2);
+            if (len != 0)
+            {
+                vec.X = vec.X / len;
+                vec.Y = vec.Y / len;
+            }
+            return vec;
+        }
+
         public override string ToString()
         {
             return string.Format("{0}({1:0.00}, {2:0.00})", "V", X, Y);

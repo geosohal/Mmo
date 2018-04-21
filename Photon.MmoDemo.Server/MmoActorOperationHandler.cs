@@ -34,6 +34,9 @@ namespace Photon.MmoDemo.Server
         Stopwatch watch; // measure time since last update event more accurately than the timer
         System.Timers.Timer updateTimer;    // timer used to regularly trigger update operation
 
+        bool isMegaThrusting;
+        float currMaxVel;
+
         public MmoActorOperationHandler(PeerBase peer, World world, InterestArea interestArea)
             : base(peer, world)
         {
@@ -44,6 +47,8 @@ namespace Photon.MmoDemo.Server
             updateTimer.Enabled = true;
             watch = new Stopwatch();
             watch.Start();
+            isMegaThrusting = false;
+            currMaxVel = GlobalVars.maxShipVel;
         }
 
         // Specify what you want to happen when the Elapsed event is raised.
@@ -64,12 +69,19 @@ namespace Photon.MmoDemo.Server
         public void UpdateAvatarPos(float msElapsed)
         {
             float elapsedSeconds = msElapsed / 1000f;
-            
 
-            Vector oldPosition = Avatar.Position;
+            // if avatar is over the usualy max speed and isn't megatthrustic then it just came out
+            // of a mega thrust and we need to ease it's spee bakc to normal
+            if (Avatar.Velocity.Len2 > GlobalVars.maxShipVelSq && !isMegaThrusting)
+            {
+                currMaxVel -= GlobalVars.megaFadePerSec * elapsedSeconds;
+                Avatar.Velocity = Vector.Normalized(Avatar.Velocity) *currMaxVel;
+            }
+
+                Vector oldPosition = Avatar.Position;
             //Vector oldRotation = Avatar.GetLastRot();
 
-            Avatar.SetPos(Avatar.Position + Avatar.Velocity * elapsedSeconds);
+            Avatar.Move(Avatar.Position + Avatar.Velocity * elapsedSeconds);
 
             if ((oldPosition - Avatar.Position).Len2 < 0.1f)
                 return;
@@ -1000,6 +1012,7 @@ namespace Photon.MmoDemo.Server
                 return operation.GetOperationResponse((int)ReturnCode.ItemNotFound, "ItemNotFound5");
             }
 
+
             return this.ItemOperationVelRot((Item)item, operation, sendParameters);
         }
     
@@ -1272,7 +1285,26 @@ namespace Photon.MmoDemo.Server
                 // move
                 if (operation.Rotation.IsZero == false)
                     item.Rotation = operation.Rotation;
-                item.Velocity = operation.Velocity;
+                item.Velocity += operation.Velocity;
+                if (operation.IsMegaThrust != null && operation.IsMegaThrust)
+                {
+                    log.InfoFormat("mEGA thursting");
+                    isMegaThrusting = true;
+                }
+                else
+                    isMegaThrusting = false;
+
+                if (!isMegaThrusting)
+                {
+                    if (item.Velocity.Len2 > GlobalVars.maxShipVelSq)
+                        item.Velocity = Vector.Normalized(item.Velocity) * GlobalVars.maxShipVel;
+                }
+                else
+                {
+                    currMaxVel = GlobalVars.megaMaxVel;
+                    if (item.Velocity.Len2 > GlobalVars.megaMaxVelSq)
+                        item.Velocity = Vector.Normalized(item.Velocity) * GlobalVars.megaMaxVel;
+                }
 
                // log.InfoFormat("vel: " + item.Velocity.ToString() + " rot:" + item.Rotation.ToString());
               
