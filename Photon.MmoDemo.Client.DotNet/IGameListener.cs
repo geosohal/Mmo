@@ -38,10 +38,6 @@ namespace Photon.MmoDemo.Client
 
         void OnItemSpawned(string itemId);
 
-        void OnLaserFired(string itemId);
-
-        void OnSaberFired(string itemId);
-
         void OnRadarUpdate(string itemId, ItemType itemType, Vector position, bool remove);
 
         void OnHpChange(string itemId, int hpChange);

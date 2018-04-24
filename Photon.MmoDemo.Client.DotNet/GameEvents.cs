@@ -133,6 +133,18 @@ namespace Photon.MmoDemo.Client
                     System.IO.File.AppendAllText(@"C:\client-" + Avatar.Id + ".log", line);
                     return;
 
+                case EventCode.SaberSpawn:
+                    itemId = (string)eventData[(byte)ParameterCode.ItemId];
+                    if (this.Items.ContainsKey(itemId))
+                    {
+                        line += "fire saber event received for " + itemId;
+                        this.Items[itemId].IsSaberFiring = true;
+                    }
+                    else
+                        line += "saber fire no such player " + itemId;
+                    System.IO.File.AppendAllText(@"C:\client-" + Avatar.Id + ".log", line);
+                    return;
+
                 case EventCode.BotSpawn:
                     itemId = (string)eventData[(byte)ParameterCode.ItemId];
                     line += " id: " + itemId + "\n";

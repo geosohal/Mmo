@@ -6,19 +6,19 @@
     using Photon.SocketServer.Rpc;
 
     /// <summary>
-    /// The operation fires a laser starting at the position with a given direction/rotation 
+    /// The operation fires a Saber starting at the position with a given direction/rotation 
     /// </summary>
     /// <remarks>
     /// This operation is allowed AFTER having entered a World with operation EnterWorld.
     /// </remarks>
-    public class FireLaser : Operation
+    public class FireSaber : Operation
     {
-        public FireLaser(IRpcProtocol protocol, OperationRequest request)
+        public FireSaber(IRpcProtocol protocol, OperationRequest request)
             : base(protocol, request)
         {
         }
 
-        // ItemId is the id of the player who fired the laser
+        // ItemId is the id of the player who fired the Saber
         [DataMember(Code = (byte)ParameterCode.ItemId)]
         public string ItemId { get; set; }
 
@@ -30,7 +30,7 @@
 
         public OperationResponse GetOperationResponse(short errorCode, string debugMessage)
         {
-            var responseObject = new FireLaserResponse { ItemId = this.ItemId };
+            var responseObject = new FireSaberResponse { ItemId = this.ItemId };
             return new OperationResponse(this.OperationRequest.OperationCode, responseObject) { ReturnCode = errorCode, DebugMessage = debugMessage };
         }
 
@@ -41,7 +41,7 @@
     }
 
 
-    public class FireLaserResponse
+    public class FireSaberResponse
     {
         [DataMember(Code = (byte)ParameterCode.ItemId)]
         public string ItemId { get; set; }

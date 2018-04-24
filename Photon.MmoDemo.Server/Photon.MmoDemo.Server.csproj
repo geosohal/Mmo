@@ -118,6 +118,7 @@
     <Compile Include="Operations\EnterWorld.cs" />
     <Compile Include="Operations\FireBullet.cs" />
     <Compile Include="Operations\FireLaser.cs" />
+    <Compile Include="Operations\FireSaber.cs" />
     <Compile Include="Operations\GetProperties.cs" />
     <Compile Include="Operations\Move.cs" />
     <Compile Include="Operations\MoveInterestArea.cs" />

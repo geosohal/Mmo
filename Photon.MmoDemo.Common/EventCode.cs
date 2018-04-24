@@ -44,6 +44,8 @@ namespace Photon.MmoDemo.Common
 
         Burst,
 
+        SaberSpawn,
+
 
 
     }

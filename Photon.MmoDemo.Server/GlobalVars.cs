@@ -46,6 +46,6 @@ namespace Photon.MmoDemo.Server
         public static float saberOnTime = 4f;   // in client: saberTimeLeft
 
         public static int laserDmgPerFrame = 1;
-        public static float laserOnTime = .8f;  // also in client for visuals: laserTimeLeft
+        public static float laserOnTime = 1f;  // also in client for visuals: laserTimeLeft
     }
 }

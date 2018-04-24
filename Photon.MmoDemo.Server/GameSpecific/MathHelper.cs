@@ -37,22 +37,35 @@ namespace Photon.MmoDemo.Server.GameSpecific
             // line segment circle intersection
         public static bool Intersects(Vector segA, Vector segB, Vector circlePos, float radius2)
         {
-            Vector segV = segB - segA;
-            Vector ptV = circlePos - segA;
-            float segVLen = segV.Len;
-
-            // closest point on segment
-            float proj = Vector.Dot(ptV, segV / segVLen);
-
-            Vector projV = (segV / segVLen) * proj;
-            Vector closest = segA + projV;
+            Vector closest = ClosestPointOnSeg(segA, segB, circlePos);
 
             Vector distV = circlePos - closest;
+
+
             if (distV.Len2 < radius2)
                 return true;
             return false;
 
             
+        }
+
+        public static Vector ClosestPointOnSeg(Vector segA, Vector segB, Vector circlePos)
+        {
+            Vector segV = segB - segA;
+            Vector ptV = circlePos - segA;
+            float segVLen = segV.Len;
+
+            Vector segVunit = segV / segVLen;
+            // closest point on segment
+            float proj = Vector.Dot(ptV, segVunit);
+            if (proj <= 0)
+                return segA;
+            if (proj >= segVLen)
+                return segB;
+
+            Vector projV = segVunit * proj;
+            Vector closest = projV + segA;
+            return closest;
         }
     }
 }

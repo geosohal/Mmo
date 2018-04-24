@@ -38,12 +38,12 @@ namespace Photon.MmoDemo.Server
         bool isBursting;
         bool isSaberOut;
         bool isLaserOn;
-        float saberLength = 250f;
-        float saberStart = 20f;
+        float saberLength = 100f;
+        float saberStart = 50f;
         float saberTimeLeft;
 
-        float laserStart = 20f;
-        float laserLength = 3000f;
+        float laserStart = 100f;
+        float laserLength = 300f;
         float laserTimeLeft;
         float currMaxVel;
 
@@ -430,8 +430,19 @@ namespace Photon.MmoDemo.Server
             Vector saberendPt = new Vector();
             if (isSaberOut)
             {
-                saberstartPt = Avatar.Position + Avatar.Rotation * this.saberStart;
-                saberendPt = saberstartPt + Avatar.Rotation * this.saberLength;
+               
+                    saberstartPt = Avatar.Position + Avatar.Rotation * this.saberStart;
+                saberendPt = Avatar.Position + Avatar.Rotation * this.saberLength;
+
+                Random r = new Random();
+                if (r.Next(50) < 5)
+                {
+                    log.InfoFormat("av pos " + Avatar.Position.ToString());
+                    log.InfoFormat("av rot " + Avatar.Rotation.ToString());
+                    log.InfoFormat("sab st " + saberstartPt.ToString());
+                    log.InfoFormat("av rot " + saberendPt.ToString());
+                }
+
                 saberTimeLeft -= elapsedSeconds;
                 if (saberTimeLeft < 0)
                     isSaberOut = false;
@@ -441,7 +452,7 @@ namespace Photon.MmoDemo.Server
             if (isLaserOn)
             {
                 laserstartPt = Avatar.Position + Avatar.Rotation * this.laserStart;
-                saberendPt = laserstartPt + Avatar.Rotation * this.laserLength;
+                laserendPt = laserstartPt + Avatar.Rotation * this.laserLength;
                 laserTimeLeft -= elapsedSeconds;
                 if (laserTimeLeft < 0)
                     isLaserOn = false;
@@ -486,16 +497,35 @@ namespace Photon.MmoDemo.Server
                             }
                         }
                         // if my light saber is out check for collision with other player ships
-                        else if ((byte)regionItem.Type == (byte)ItemType.Avatar && isSaberOut)
+                        else if ((byte)regionItem.Type == (byte)ItemType.Avatar && isSaberOut && regionItem != Avatar)
                         {
                             if(MathHelper.Intersects(saberstartPt, saberendPt, regionItem.Position, GlobalVars.playerShipRadius2))
                             {
+                                log.InfoFormat("saber collide with a shio");
                                 SendParameters sp = GetDefaultSP();
 
                                 var eventInstance = new HpEvent
                                 {
                                     ItemId = regionItem.Id,
                                     HpChange = GlobalVars.saberDmgPerFrame,
+                                };
+                                var eventData = new EventData((byte)EventCode.HpEvent, eventInstance);
+                                var message = new ItemEventMessage(regionItem, eventData, sp);
+                                regionItem.EventChannel.Publish(message);
+                            }
+                        }
+                        // if my laser is on check for collision with other player ships
+                        else if ((byte)regionItem.Type == (byte)ItemType.Avatar && isLaserOn && regionItem != Avatar)
+                        {
+                            if (MathHelper.Intersects(laserstartPt, laserendPt, regionItem.Position, GlobalVars.playerShipRadius2))
+                            {
+                                log.InfoFormat("laser collide with a shio");
+                                SendParameters sp = GetDefaultSP();
+
+                                var eventInstance = new HpEvent
+                                {
+                                    ItemId = regionItem.Id,
+                                    HpChange = GlobalVars.laserDmgPerFrame,
                                 };
                                 var eventData = new EventData((byte)EventCode.HpEvent, eventInstance);
                                 var message = new ItemEventMessage(regionItem, eventData, sp);
@@ -644,6 +674,61 @@ namespace Photon.MmoDemo.Server
             }
 
             return this.OperationFireBulletHelper((Item)item, operation, sendParameters, peer.RoundTripTime);
+        }
+
+        public OperationResponse OperationFireSaber(PeerBase peer, OperationRequest request, SendParameters sendParameters)
+        {
+            var operation = new FireSaber(peer.Protocol, request);
+            // operation.Position = Avatar.Position;
+            // operation.Rotation = Avatar.Rotation;
+            if (!operation.IsValid)
+            {
+                return new OperationResponse(request.OperationCode) { ReturnCode = (int)ReturnCode.InvalidOperationParameter, DebugMessage = operation.GetErrorMessage() };
+            }
+            operation.OnStart();
+
+            Item item;
+            if (string.IsNullOrEmpty(operation.ItemId))
+            {
+                item = this.Avatar;
+
+                // set return values
+                operation.ItemId = item.Id;
+            }
+            else if (this.TryGetItem(operation.ItemId, out item) == false)
+            {
+                return operation.GetOperationResponse((int)ReturnCode.ItemNotFound, "playerWithIdNotFound1");
+            }
+
+            return this.OperationFireSaberHelper((Item)item, operation, sendParameters, peer.RoundTripTime);
+        }
+
+        private OperationResponse OperationFireSaberHelper(Item item, FireSaber operation, SendParameters sendParameters, int roundTripTime)
+        {
+            log.InfoFormat("firingsaber");
+            isSaberOut = true;
+            saberTimeLeft = GlobalVars.saberOnTime;
+
+            // should always be OK
+            MethodReturnValue result = this.CheckAccess(item);
+            if (result.IsOk)
+            {
+                // send event
+                var eventInstance = new SaberFired
+                {
+                    ItemId = item.Id,
+                };
+
+                var eventData = new EventData((byte)EventCode.SaberSpawn, eventInstance);
+                sendParameters.ChannelId = Settings.ItemEventChannel;
+                var message = new ItemEventMessage(item, eventData, sendParameters);
+                item.EventChannel.Publish(message); // anyone in the players event channel will need to spawn the bullet
+                                                    // no response sent
+                operation.OnComplete();
+                return null;
+            }
+
+            return operation.GetOperationResponse(result);
         }
 
         // untested custom operation for when the player fires a laser weapon
@@ -1065,9 +1150,8 @@ namespace Photon.MmoDemo.Server
                     ApplyBurst();
                     return new OperationResponse(operationRequest.OperationCode);
                 case OperationCode.FireSaber:
-                    isSaberOut = true;
-                    saberTimeLeft = GlobalVars.saberOnTime;
-                    return new OperationResponse(operationRequest.OperationCode);
+
+                    return this.OperationFireSaber(peer, operationRequest, sendParameters);
 
             }
 

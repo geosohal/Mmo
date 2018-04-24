@@ -186,16 +186,6 @@ namespace Photon.MmoDemo.Client
             this.listener.OnItemSpawned(itemId);
         }
 
-        public void OnLaserFired(string itemId)
-        {
-            this.listener.OnLaserFired(itemId);
-        }
-
-        public void OnSaberFired(string itemId)
-        {
-            this.listener.OnSaberFired(itemId);
-        }
-
         public void OnUnexpectedEventReceive(EventData @event)
         {
             this.listener.LogError(string.Format("{0}: unexpected event {1}", this.avatar.Text, @event.Code));
@@ -389,18 +379,22 @@ namespace Photon.MmoDemo.Client
                             return;
 
                         case OperationCode.SpawnItem:
+
                             itemId = (string)response[(byte)ParameterCode.ItemId];
+
+                            string line = "sadding item: " + itemId + "\n";
+                            System.IO.File.AppendAllText(@"C:\client-" + Avatar.Id + ".log", line);
                             this.OnItemSpawned(itemId);
                             return;
                         case OperationCode.FireLaser:
-                            itemId = (string)response[(byte)ParameterCode.ItemId];
-                         //   Vector pos = (Vector)response[(byte)ParameterCode.Position];
-                          //  Vector rot = (Vector)response[(byte)ParameterCode.Rotation];
-                            this.OnLaserFired(itemId);
+                         //   itemId = (string)response[(byte)ParameterCode.ItemId];
+                         ////   Vector pos = (Vector)response[(byte)ParameterCode.Position];
+                         // //  Vector rot = (Vector)response[(byte)ParameterCode.Rotation];
+                         //   this.OnLaserFired(itemId);
                             return;
                         case OperationCode.FireSaber:
-                            itemId = (string)response[(byte)ParameterCode.ItemId];
-                            this.OnSaberFired(itemId);
+                            //itemId = (string)response[(byte)ParameterCode.ItemId];
+                            //this.OnSaberFired(itemId);
                             return;
 
                         case OperationCode.RadarSubscribe:

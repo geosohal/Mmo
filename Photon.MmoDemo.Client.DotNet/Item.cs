@@ -39,7 +39,7 @@ namespace Photon.MmoDemo.Client
         private readonly ItemType type;
 
         private readonly bool isMine;
-
+        
        
 
         public Item(Game game, string id, ItemType type, bool isMine = false)
@@ -49,6 +49,7 @@ namespace Photon.MmoDemo.Client
             this.type = type;
             this.isMine = isMine;
             this.IsLaserFiring = false;
+            this.IsSaberFiring = false;
             this.subscribedInterestAreas = new List<byte>();
         }
 
@@ -60,6 +61,8 @@ namespace Photon.MmoDemo.Client
         public int Color { get; private set; }
 
         public bool IsLaserFiring { get; set; }
+
+        public bool IsSaberFiring { get; set; }
 
 
         public Game Game
