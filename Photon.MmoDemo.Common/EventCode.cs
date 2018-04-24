@@ -40,6 +40,10 @@ namespace Photon.MmoDemo.Common
 
         HpEvent,    // for hp loss or gain
 
+        BotSpawn,
+
+        Burst,
+
 
 
     }

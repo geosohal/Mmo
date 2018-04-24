@@ -63,7 +63,11 @@ namespace Photon.MmoDemo.Common
 
         VelocityRotation = 112,
 
-        Breaks = 113
+        Breaks = 113,
+
+        Burst = 114,
+
+        FireSaber
 
 
     }

@@ -70,10 +70,14 @@
     </Reference>
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
+    <Reference Include="UnityEngine">
+      <HintPath>..\..\..\..\..\Asterark3\winbin\test_Data\Managed\UnityEngine.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ClientInterestArea.cs" />
     <Compile Include="CounterOperations.cs" />
+    <Compile Include="Events\BotSpawn.cs" />
     <Compile Include="Events\BulletExpired.cs" />
     <Compile Include="Events\BulletSpawn.cs" />
     <Compile Include="Events\CounterDataEvent.cs" />
@@ -91,6 +95,8 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Bullet.cs" />
+    <Compile Include="GameSpecific\BotManager.cs" />
+    <Compile Include="GameSpecific\MathHelper.cs" />
     <Compile Include="GlobalVars.cs" />
     <Compile Include="GridWorld.cs" />
     <Compile Include="InterestArea.cs" />
@@ -144,9 +150,7 @@
       <Name>Photon.MmoDemo.Common</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="GameSpecific\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

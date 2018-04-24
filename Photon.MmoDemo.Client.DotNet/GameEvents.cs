@@ -133,6 +133,16 @@ namespace Photon.MmoDemo.Client
                     System.IO.File.AppendAllText(@"C:\client-" + Avatar.Id + ".log", line);
                     return;
 
+                case EventCode.BotSpawn:
+                    itemId = (string)eventData[(byte)ParameterCode.ItemId];
+                    line += " id: " + itemId + "\n";
+                    Item newbot = new Item(this, itemId, ItemType.Bot);
+                    Vector Pos = (Vector)eventData[(byte)ParameterCode.Position];
+                    Vector Rot = (Vector)eventData[(byte)ParameterCode.Rotation];
+                    newbot.SetPositions(Pos, Pos, Rot, Rot);
+                    AddItem(newbot);
+                    System.IO.File.AppendAllText(@"C:\client-" + Avatar.Id + ".log", line);
+                    return;
                     /*
                 case EventCode.BulletExpire:
                     itemId = (string)eventData[(byte)ParameterCode.ItemId];

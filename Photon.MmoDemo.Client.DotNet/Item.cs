@@ -40,6 +40,8 @@ namespace Photon.MmoDemo.Client
 
         private readonly bool isMine;
 
+       
+
         public Item(Game game, string id, ItemType type, bool isMine = false)
         {
             this.game = game;

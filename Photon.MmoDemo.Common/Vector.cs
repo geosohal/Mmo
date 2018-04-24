@@ -81,6 +81,10 @@ namespace Photon.MmoDemo.Common
             return new Vector {X = Math.Min(value1.X, value2.X), Y = Math.Min(value1.Y, value2.Y)};
         }
 
+        public static float Dot(Vector lhs, Vector rhs)
+        {
+            return (float)((double)lhs.X * (double)rhs.X + (double)lhs.Y * (double)rhs.Y);
+        }
         public static Vector Normalized(Vector vec)
         {
             float len = (float)Math.Sqrt(vec.Len2);
@@ -105,6 +109,12 @@ namespace Photon.MmoDemo.Common
         public float Len2
         {
             get { return X*X + Y*Y; }
+        }
+
+ 
+        public float Len
+        {
+            get { return (float)Math.Sqrt(X * X + Y * Y); }
         }
     }
 }

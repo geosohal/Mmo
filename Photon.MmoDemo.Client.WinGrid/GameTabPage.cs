@@ -233,10 +233,13 @@ namespace Photon.MmoDemo.Client.WinGrid
             }
         }
 
-        public void OnLaserFired(string itemId, Vector position, Vector rotation)
+        public void OnLaserFired(string itemId)
         {
 
         }
+
+        public void OnSaberFired(string itemId)
+        { }
 
         public void OnRadarUpdate(string itemId, ItemType itemType, Vector position, bool remove)
         {

@@ -18,6 +18,9 @@ namespace Photon.MmoDemo.Client
 
     public class MyItem : Item
     {
+        public bool IsSaberOn;
+        public bool IsLaserOn;
+
         public MyItem(Game game, string id, ItemType type, string text)
             : base(game, id, type, true)
         {
@@ -28,6 +31,8 @@ namespace Photon.MmoDemo.Client
             var c3 = (uint)r.Next(b0, 256);
             base.SetColor((int)(((c1 << 16) + (c2 << 8) + c3) | 0xFF000000));
             base.SetText(text);
+            IsSaberOn = false;
+            IsLaserOn = false;
         }
 
         public override bool IsMine { get { return true; } }
@@ -76,9 +81,27 @@ namespace Photon.MmoDemo.Client
             return true;
         }
 
+        public bool ApplyBurst()
+        {
+            Operations.ApplyBurst(this.Game, this.Id, this.Game.Settings.SendReliable);
+            return true;
+        }
+
         public bool ApplyBreak()
         {
             Operations.Break(this.Game, this.Id, this.Game.Settings.SendReliable);
+            return true;
+        }
+
+        public bool FireSaber()
+        {
+            Operations.FireSaber(this.Game, this.Id, this.Game.Settings.SendReliable);
+            return true;
+        }
+
+        public bool FireLaser()
+        {
+            Operations.FireLaser(this.Game, this.Id, this.Game.Settings.SendReliable);
             return true;
         }
 

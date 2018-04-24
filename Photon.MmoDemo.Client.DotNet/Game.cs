@@ -186,9 +186,14 @@ namespace Photon.MmoDemo.Client
             this.listener.OnItemSpawned(itemId);
         }
 
-        public void OnLaserFired(string itemId, Vector position, Vector rotation)
+        public void OnLaserFired(string itemId)
         {
-            this.listener.OnLaserFired(itemId, position, rotation);
+            this.listener.OnLaserFired(itemId);
+        }
+
+        public void OnSaberFired(string itemId)
+        {
+            this.listener.OnSaberFired(itemId);
         }
 
         public void OnUnexpectedEventReceive(EventData @event)
@@ -389,9 +394,13 @@ namespace Photon.MmoDemo.Client
                             return;
                         case OperationCode.FireLaser:
                             itemId = (string)response[(byte)ParameterCode.ItemId];
-                            Vector pos = (Vector)response[(byte)ParameterCode.Position];
-                            Vector rot = (Vector)response[(byte)ParameterCode.Rotation];
-                            this.OnLaserFired(itemId, pos, rot);
+                         //   Vector pos = (Vector)response[(byte)ParameterCode.Position];
+                          //  Vector rot = (Vector)response[(byte)ParameterCode.Rotation];
+                            this.OnLaserFired(itemId);
+                            return;
+                        case OperationCode.FireSaber:
+                            itemId = (string)response[(byte)ParameterCode.ItemId];
+                            this.OnSaberFired(itemId);
                             return;
 
                         case OperationCode.RadarSubscribe:

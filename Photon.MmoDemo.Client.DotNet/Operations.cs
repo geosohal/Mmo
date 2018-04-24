@@ -143,6 +143,14 @@ namespace Photon.MmoDemo.Client
             game.SendOperation(OperationCode.VelocityRotation, data, sendReliable, Settings.ItemChannel);
         }
 
+        public static void ApplyBurst(Game game, string itemId, bool sendReliable)
+        {
+            var data = new Dictionary<byte, object>();
+            if (itemId != null)
+                data.Add((byte)ParameterCode.ItemId, itemId);
+            game.SendOperation(OperationCode.Burst, data, sendReliable, Settings.ItemChannel);
+        }
+
         public static void Break(Game game, string itemId, bool sendReliable)
         {
             var data = new Dictionary<byte, object>();
@@ -152,14 +160,20 @@ namespace Photon.MmoDemo.Client
 
         }
 
-        // todo: probably want to add playerid here to avoid friendly fire
-        public static void FireLaser(Game game, Vector position, Vector rotation, bool sendReliable)
+        public static void FireSaber(Game game, string itemId, bool sendReliable)
         {
-            var data = new Dictionary<byte, object> { { (byte)ParameterCode.Position, position } };
-            if (!rotation.IsZero)
-            {
-                data.Add((byte)ParameterCode.Rotation, rotation);
-            }
+            var data = new Dictionary<byte, object>();
+            if (itemId != null)
+                data.Add((byte)ParameterCode.ItemId, itemId);
+            game.SendOperation(OperationCode.FireSaber, data, sendReliable, Settings.ItemChannel);
+        }
+
+        // todo: probably want to add playerid here to avoid friendly fire
+        public static void FireLaser(Game game, string itemId, bool sendReliable)
+        {
+            var data = new Dictionary<byte, object>();
+            if (itemId != null)
+                data.Add((byte)ParameterCode.ItemId, itemId);
             game.SendOperation(OperationCode.FireLaser, data, sendReliable, Settings.ItemChannel);
         }
 
