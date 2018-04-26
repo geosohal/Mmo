@@ -519,6 +519,15 @@ namespace Photon.MmoDemo.Client.WinGrid
 
         }
 
+        public void OnBombSpawn(string itemId)
+        {
+
+        }
+        public void OnBombExplode(string itemId, Vector position)
+        {
+
+        }
+
         private void PaintActor(Game game, Graphics grfx, int[] boardSize, Item actor)
         {
             WorldData world = game.WorldData;

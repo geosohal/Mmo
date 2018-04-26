@@ -46,6 +46,10 @@ namespace Photon.MmoDemo.Common
 
         SaberSpawn,
 
+        BombSpawn,
+
+        BombExplosion
+
 
 
     }

@@ -34,21 +34,52 @@ namespace Photon.MmoDemo.Server.GameSpecific
         //    return (cornerDistance_sq <= (circleRad ^ 2));
         //}
 
-            // line segment circle intersection
-        public static bool Intersects(Vector segA, Vector segB, Vector circlePos, float radius2)
+        // line segment circle intersection segment length can be passed and and this sped up by a lot.
+        public static bool Intersects(Vector segA, Vector segB, Vector circlePos, float radius2, ref Vector offset,
+            float radius, float? segmentLength, bool returnOFfset)
         {
-            Vector closest = ClosestPointOnSeg(segA, segB, circlePos);
+            Vector segV = segB - segA;
+            Vector ptV = circlePos - segA;
+
+            float segVLen;
+            if (segmentLength != null)
+                segVLen = (float)segmentLength;
+            else
+                segVLen = segV.Len;
+
+            Vector segVunit = segV / segVLen;
+            // closest point on segment
+            float proj = Vector.Dot(ptV, segVunit);
+            Vector closest;
+            Vector projV;
+            if (proj <= 0)
+                closest = segA;
+            else if (proj >= segVLen)
+                closest = segB;
+            else
+            {
+                projV = segVunit * proj;
+                closest = projV + segA;
+            }
 
             Vector distV = circlePos - closest;
 
-
-            if (distV.Len2 < radius2)
+            float distVLen2 = distV.Len2;
+            if (distVLen2 < radius2)
+            {
+                if (returnOFfset)
+                {
+                    float distVLen = (float)Math.Sqrt(distVLen2);
+                    offset =  ( distV  / distVLen) * (radius - distVLen); 
+                }
                 return true;
+            }
             return false;
 
             
         }
 
+        // segment length can be passed and and this sped up by a lot.
         public static Vector ClosestPointOnSeg(Vector segA, Vector segB, Vector circlePos)
         {
             Vector segV = segB - segA;

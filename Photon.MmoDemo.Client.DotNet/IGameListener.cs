@@ -42,6 +42,10 @@ namespace Photon.MmoDemo.Client
 
         void OnHpChange(string itemId, int hpChange);
 
+        void OnBombSpawn(string itemId);
+
+        void OnBombExplode(string itemId, Vector position);
+
         void OnWorldEntered();
     }
 }

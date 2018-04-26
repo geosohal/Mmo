@@ -84,8 +84,12 @@ namespace Photon.MmoDemo.Server
         protected NetworkState[] posBuffer = new NetworkState[20];  // previous positions used for rewind
         protected int currBufferIndex = 0;  // index of latest network state
         protected int posSetCount = 0;  // count for times position has been set
-        // some assumptions about the buffer: SetPos() is called once per network update cycle and
-        // network update cycles are roughly fixed size to be optimized, but it will still work if not fixed size
+                                        // some assumptions about the buffer: SetPos() is called once per network update cycle and
+                                        // network update cycles are roughly fixed size to be optimized, but it will still work if not fixed size
+
+            // we're keeping a seperate buffer for rotations for now, this will need to be united with the rest soon
+        protected Vector[] rotBuffer = new Vector[20];
+        protected int currRotBufferIndex = 0;
 
         private static readonly ILogger log = LogManager.GetCurrentClassLogger();
 
@@ -149,7 +153,17 @@ namespace Photon.MmoDemo.Server
 
         public MmoActorOperationHandler Owner { get; private set; }
 
-        public Vector Rotation { get; set; }
+        public Vector Rotation {
+            get
+            {
+                return rotBuffer[currRotBufferIndex];
+            }
+            set
+            {
+                currRotBufferIndex = (currRotBufferIndex+1)%20;
+                rotBuffer[currRotBufferIndex] = value;
+            }
+        }
 
         public Vector Velocity { get; set; }
 
@@ -164,6 +178,29 @@ namespace Photon.MmoDemo.Server
                     return (Vector)posBuffer[lastRotIndex].rot;
             }
             return Rotation;
+        }
+
+        public float GetCumulativeDotProducts(int howManyFrames)
+        {
+            bool printDebug = false;
+            if ((new Random()).Next(10) < 2)
+                printDebug = true;
+            float ans = 0;
+            for (int i = 0; i < howManyFrames; i++)
+            {
+                Vector curr = rotBuffer[(currRotBufferIndex - i)%20];
+                Vector last = rotBuffer[(currRotBufferIndex - i - 1) % 20];
+                if (printDebug)
+                {
+                    GlobalVars.log.InfoFormat("cuR " + curr.ToString());
+                    GlobalVars.log.InfoFormat("las " + last.ToString());
+                }
+                ans += Vector.Dot(curr, last);
+            }
+
+            if (printDebug)
+                return ans;
+            return ans;
         }
 
         public void SetPos(Vector val, double totalTimeInMS)

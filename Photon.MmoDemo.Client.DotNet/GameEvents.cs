@@ -64,6 +64,16 @@ namespace Photon.MmoDemo.Client
                         Vector oldRotation = (Vector)(eventData[(byte)ParameterCode.OldRotation] ?? Vector.Zero);
                         item.SetPositions(position, oldPosition, rotation, oldRotation);
                     }
+                    // item is bomb type if it starts with 'zz'
+                    else if (itemId[0] == 'z' && itemId[1] == 'z' && this.TryGetItem(itemId, out item))
+                    {
+                        // todo optimize we will change this to bulletmoved event so we dont need to pass rotations
+                        Vector position = (Vector)eventData[(byte)ParameterCode.Position];
+                        Vector oldPosition = (Vector)eventData[(byte)ParameterCode.OldPosition];
+                        Vector rotation = (Vector)(eventData[(byte)ParameterCode.Rotation] ?? Vector.Zero);
+                        Vector oldRotation = (Vector)(eventData[(byte)ParameterCode.OldRotation] ?? Vector.Zero);
+                        item.SetPositions(position, oldPosition, rotation, oldRotation);
+                    }
                     else if (this.TryGetItem(itemId, out item))
                     {
                        // if (!item.IsMine) only needed this when we did SetPositionson client with the Move opreation
@@ -124,46 +134,70 @@ namespace Photon.MmoDemo.Client
 
                 case EventCode.BulletSpawn:
                     itemId = (string)eventData[(byte)ParameterCode.ItemId];
-                    line += " id: " + itemId + "\n";
+                //    line += " id: " + itemId + "\n";
                     Item newbullet = new Item(this, itemId, ItemType.Bullet);
                     Vector pos = (Vector)eventData[(byte)ParameterCode.Position];
                     Vector rot = (Vector)eventData[(byte)ParameterCode.Rotation];
                     newbullet.SetPositions(pos, pos, rot, rot);
                     AddItem(newbullet);
-                    System.IO.File.AppendAllText(@"C:\client-" + Avatar.Id + ".log", line);
+               //     System.IO.File.AppendAllText(@"C:\client-" + Avatar.Id + ".log", line);
                     return;
 
                 case EventCode.SaberSpawn:
                     itemId = (string)eventData[(byte)ParameterCode.ItemId];
                     if (this.Items.ContainsKey(itemId))
                     {
-                        line += "fire saber event received for " + itemId;
+                  //      line += "fire saber event received for " + itemId;
                         this.Items[itemId].IsSaberFiring = true;
                     }
-                    else
-                        line += "saber fire no such player " + itemId;
-                    System.IO.File.AppendAllText(@"C:\client-" + Avatar.Id + ".log", line);
+               //     else
+                //        line += "saber fire no such player " + itemId;
+             //       System.IO.File.AppendAllText(@"C:\client-" + Avatar.Id + ".log", line);
                     return;
 
                 case EventCode.BotSpawn:
                     itemId = (string)eventData[(byte)ParameterCode.ItemId];
-                    line += " id: " + itemId + "\n";
+             //       line += " id: " + itemId + "\n";
                     Item newbot = new Item(this, itemId, ItemType.Bot);
                     Vector Pos = (Vector)eventData[(byte)ParameterCode.Position];
                     Vector Rot = (Vector)eventData[(byte)ParameterCode.Rotation];
                     newbot.SetPositions(Pos, Pos, Rot, Rot);
                     AddItem(newbot);
-                    System.IO.File.AppendAllText(@"C:\client-" + Avatar.Id + ".log", line);
+              //      System.IO.File.AppendAllText(@"C:\client-" + Avatar.Id + ".log", line);
                     return;
-                    /*
-                case EventCode.BulletExpire:
+                case EventCode.BombSpawn:
+                    
+                   // System.IO.File.AppendAllText(@"C:\client-" + Avatar.Id + ".log", line);
                     itemId = (string)eventData[(byte)ParameterCode.ItemId];
-                    if (this.TryGetItem(itemId, out item))
-                    {
-                        item.IsDestroyed = this.RemoveItem(item);
+                    Vector bombpos = (Vector)eventData[(byte)ParameterCode.Position];
+                    
+                    Item newBomb = new Item(this, itemId, ItemType.Bomb);
+                    Vector bombRot = new Vector(0, 0);
+                    newBomb.SetPositions(bombpos, bombpos, bombRot, bombRot);
+                    AddItem(newBomb);
+                    line += "adding bomb id: " + itemId + "\n";
+                    System.IO.File.AppendAllText(@"C:\client-" + Avatar.Id + ".log", line);
+                    this.listener.OnBombSpawn(itemId);
+                    return;
+
+                case EventCode.BombExplosion:
+                    itemId = (string)eventData[(byte)ParameterCode.ItemId];
+                    Vector posb = (Vector)eventData[(byte)ParameterCode.Position];
+                    this.listener.OnBombExplode(itemId, posb);
+                    return;
+                    //Vector pos;
+                    //if (this.Items.ContainsKey(itemId))
+                    //{
+                    //    if pos
+                        /*
+                    case EventCode.BulletExpire:
+                        itemId = (string)eventData[(byte)ParameterCode.ItemId];
+                        if (this.TryGetItem(itemId, out item))
+                        {
+                            item.IsDestroyed = this.RemoveItem(item);
+                        }
+                        return;*/
                     }
-                    return;*/
-            }
             
             this.OnUnexpectedEventReceive(eventData);
         }
@@ -240,8 +274,8 @@ namespace Photon.MmoDemo.Client
             if (!this.TryGetItem(itemId, out item)) // register item first time seen 
             {
                 item = new Item(this, itemId, itemType);
-                string line = "subscribed adding item: " + item.Id + "\n";
-                System.IO.File.AppendAllText(@"C:\client-" + Avatar.Id+ ".log", line);
+        //        string line = "subscribed adding item: " + item.Id + "\n";
+         //       System.IO.File.AppendAllText(@"C:\client-" + Avatar.Id+ ".log", line);
                 this.AddItem(item);
                 item.GetProperties();
             } 

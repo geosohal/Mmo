@@ -129,8 +129,8 @@ namespace Photon.MmoDemo.Client
 
         public void AddItem(Item item)
         {
-            string line = "adding item: " + item.Id + "\n";
-            System.IO.File.AppendAllText(@"C:\client-" + Avatar.Id + ".log", line);
+          //  string line = "adding item: " + item.Id + "\n";
+          //  System.IO.File.AppendAllText(@"C:\client-" + Avatar.Id + ".log", line);
             if (!itemCache.ContainsKey(item.Id))
             {
                 itemCache.Add(item.Id, item);
@@ -382,8 +382,8 @@ namespace Photon.MmoDemo.Client
 
                             itemId = (string)response[(byte)ParameterCode.ItemId];
 
-                            string line = "sadding item: " + itemId + "\n";
-                            System.IO.File.AppendAllText(@"C:\client-" + Avatar.Id + ".log", line);
+                       //     string line = "sadding item: " + itemId + "\n";
+                       //     System.IO.File.AppendAllText(@"C:\client-" + Avatar.Id + ".log", line);
                             this.OnItemSpawned(itemId);
                             return;
                         case OperationCode.FireLaser:

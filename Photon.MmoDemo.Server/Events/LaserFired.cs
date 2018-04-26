@@ -40,11 +40,41 @@ namespace Photon.MmoDemo.Server.Events
     }
 
     /// <summary>
-    /// Clients receive this event after executing operation BulletFired.
+    /// Clients receive this event after executing operation .
     /// </summary>
     public class SaberFired
     {
         [DataMember(Code = (byte)ParameterCode.ItemId)]
         public string ItemId { get; set; }
+    }
+
+    /// <summary>
+    /// Clients receive this event after executing operation .
+    /// </summary>
+    public class BombFired
+    {
+        [DataMember(Code = (byte)ParameterCode.ItemId)]
+        public string ItemId { get; set; }
+
+        [DataMember(Code = (byte)ParameterCode.Position)]
+        public Vector Position { get; set; }
+
+        [DataMember(Code = (byte)ParameterCode.Rotation, IsOptional = true)]
+        public Vector Rotation { get; set; }
+    }
+
+    /// <summary>
+    /// Clients receive this event after executing operation .
+    /// </summary>
+    public class BombExplosion
+    {
+        [DataMember(Code = (byte)ParameterCode.ItemId)]
+        public string ItemId { get; set; }
+
+        [DataMember(Code = (byte)ParameterCode.Position)]
+        public Vector Position { get; set; }
+
+        [DataMember(Code = (byte)ParameterCode.Rotation, IsOptional = true)]
+        public Vector Rotation { get; set; }
     }
 }

@@ -188,6 +188,19 @@ namespace Photon.MmoDemo.Client
             game.SendOperation(OperationCode.FireBullet, data, sendReliable, Settings.ItemChannel);
         }
 
+        public static void LaunchBomb(Game game, Vector rotation, string itemId, bool sendReliable)
+        {
+            var data = new Dictionary<byte, object>();
+            if (itemId != null)
+                data.Add((byte)ParameterCode.ItemId, itemId);
+            if (!rotation.IsZero)
+            {
+                data.Add((byte)ParameterCode.Rotation, rotation);
+                //  data.Add( (byte)ParameterCode.OldRotation, new Vector(velx, vely)); // this is actually avatar velocity
+            }
+            game.SendOperation(OperationCode.ShootBomb, data, sendReliable, Settings.ItemChannel);
+        }
+
 
 
         public static void MoveInterestArea(Game game, byte cameraId, Vector position)

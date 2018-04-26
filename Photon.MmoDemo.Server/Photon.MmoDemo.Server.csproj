@@ -127,6 +127,7 @@
     <Compile Include="Operations\RemoveInterestArea.cs" />
     <Compile Include="Operations\SetProperties.cs" />
     <Compile Include="Operations\SetViewDistance.cs" />
+    <Compile Include="Operations\ShootBomb.cs" />
     <Compile Include="Operations\SpawnItem.cs" />
     <Compile Include="Operations\SubscribeCounter.cs" />
     <Compile Include="Operations\SubscribeItem.cs" />

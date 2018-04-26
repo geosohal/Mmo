@@ -67,7 +67,9 @@ namespace Photon.MmoDemo.Common
 
         Burst = 114,
 
-        FireSaber
+        FireSaber = 115,
+
+        ShootBomb = 116
 
 
     }

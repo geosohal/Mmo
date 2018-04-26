@@ -36,4 +36,30 @@ namespace Photon.MmoDemo.Server
             return (timeToLive > 0);
         }
     }
+
+    public class Bomb : Item
+    {
+        private float timeToLive;
+        public float? secsFromLastUpdateDone; // if this is bullets first update this member stores
+                                              // how much of the first update is already done due to being applied at spawn
+        public Vector forward;
+
+        // remember rotation is velocity lol
+        public Bomb(Vector position, Vector velocity, Hashtable properties, MmoActorOperationHandler owner, string id, byte type, World world)
+            : base(position, velocity, properties, owner, id, type, world)
+        {
+            timeToLive = GlobalVars.bombTime;
+            secsFromLastUpdateDone = null;
+        }
+
+        public void DecreaseLife(float timeElapsed)
+        {
+            timeToLive -= timeElapsed;
+        }
+
+        public bool IsAlive()
+        {
+            return (timeToLive > 0);
+        }
+    }
 }
