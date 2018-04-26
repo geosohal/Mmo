@@ -17,6 +17,7 @@ namespace Photon.MmoDemo.Common
         Avatar, 
         Bullet,
         Bot,
-        Bomb
+        Bomb,
+        Resource
     }
 }

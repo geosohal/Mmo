@@ -51,6 +51,8 @@ namespace Photon.MmoDemo.Server
         // bein inside it.
         // put it here because Item needs a Peer to initialize an item
         BotManager botman;
+        Random random;
+        bool firstUpdate;
         
 
         public MmoActorOperationHandler(PeerBase peer, World world, InterestArea interestArea)
@@ -69,13 +71,28 @@ namespace Photon.MmoDemo.Server
             isBursting = false;
             isSaberOut = false;
             isBombOut = false;
+            random = new Random();
+            firstUpdate = true;
+
         }
 
-
+        private Vector GetRandomPosition()
+        {
+            var d = this.World.Area.Max - this.World.Area.Min;
+            return this.World.Area.Min + new Vector { X = d.X * (float)this.random.NextDouble(), Y = d.Y * (float)this.random.NextDouble() };
+        }
 
         // Specify what you want to happen when the Elapsed event is raised.
         private void OnTimersUpdateEvent(object source, System.Timers.ElapsedEventArgs e)
         {
+            if (firstUpdate)
+            {
+                // spawn random hp boxes
+                for (int i =0; i < 15; i++)
+                    AddHPBox(GetRandomPosition());
+                log.InfoFormat("added hps");
+                firstUpdate = false;
+            }
             watch.Stop();   // sets elapsed time to time since watch.Start() was called
             TimeSpan ts = watch.Elapsed;
             float msElapse = (float)ts.Milliseconds;
@@ -88,6 +105,16 @@ namespace Photon.MmoDemo.Server
 
            
             watch = Stopwatch.StartNew();
+        }
+
+        private void AddHPBox(Vector pos)
+        {
+            string itemId = "hp" + GlobalVars.HPboxCount++;
+            log.InfoFormat("adding " + itemId.ToString());
+            Item hpbox = new Item(pos, Vector.Zero, new Hashtable(), this, itemId, (byte)ItemType.Resource, this.World);
+            hpbox.World.ItemCache.AddItem(hpbox);
+            AddItem(hpbox);
+            hpbox.UpdateRegionSimple();
         }
 
         public void UpdateAvatarPos(float msElapsed)
@@ -468,11 +495,11 @@ namespace Photon.MmoDemo.Server
                             float distanceToBullet2 = (regionItem.Position - Avatar.Position).Len2;
                             if (distanceToBullet2 < GlobalVars.playerShipRadius2)
                             {
-                                log.InfoFormat("player + " + Avatar.Id.Substring(0,3) +" collision with: " + 
+                                log.InfoFormat("player + " + Avatar.Id.Substring(0, 3) + " collision with: " +
                                     (ItemType)regionItem.Type);
                                 if (removeList == null)
-                                    removeList = new List<Tuple<Item,Region>>();
-                                removeList.Add(new Tuple< Item, Region >(regionItem, reg));   // set bullet to be removed
+                                    removeList = new List<Tuple<Item, Region>>();
+                                removeList.Add(new Tuple<Item, Region>(regionItem, reg));   // set bullet to be removed
 
 
 
@@ -498,9 +525,9 @@ namespace Photon.MmoDemo.Server
                         // if my light saber is out check for collision with other player ships
                         else if ((byte)regionItem.Type == (byte)ItemType.Avatar && isSaberOut && regionItem != Avatar)
                         {
-                            
-                            if(MathHelper.Intersects(saberstartPt, saberendPt, regionItem.Position, GlobalVars.playerShipRadius2, 
-                                 ref offset, GlobalVars.playerShipRadius,null,true))
+
+                            if (MathHelper.Intersects(saberstartPt, saberendPt, regionItem.Position, GlobalVars.playerShipRadius2,
+                                 ref offset, GlobalVars.playerShipRadius, null, true))
                             {
                                 log.InfoFormat("saber collide with a shio");
                                 SendParameters sp = GetDefaultSP();
@@ -523,17 +550,17 @@ namespace Photon.MmoDemo.Server
                                 log.InfoFormat("saber collide with a bomb");
                                 SendParameters sp = GetDefaultSP();
 
-                                regionItem.SetPos(regionItem.Position + offset*2.1f); // move over instantly to uncollided position
+                                regionItem.SetPos(regionItem.Position + offset * 2.1f); // move over instantly to uncollided position
 
                                 // set bomb velocity using 'collision impact' with saber
-                                regionItem.Velocity = regionItem.Velocity+ (offset / offset.Len) * Avatar.GetCumulativeDotProducts(5)*90f;
+                                regionItem.Velocity = regionItem.Velocity + (offset / offset.Len) * Avatar.GetCumulativeDotProducts(5) * 90f;
                             }
                         }
                         // if my laser is on check for collision with other player ships
                         else if ((byte)regionItem.Type == (byte)ItemType.Avatar && isLaserOn && regionItem != Avatar)
                         {
                             if (MathHelper.Intersects(laserstartPt, laserendPt, regionItem.Position, GlobalVars.playerShipRadius2,
-                                ref offset, GlobalVars.playerShipRadius,null,false))
+                                ref offset, GlobalVars.playerShipRadius, null, false))
                             {
                                 log.InfoFormat("laser collide with a shio");
                                 SendParameters sp = GetDefaultSP();
@@ -546,6 +573,29 @@ namespace Photon.MmoDemo.Server
                                 var eventData = new EventData((byte)EventCode.HpEvent, eventInstance);
                                 var message = new ItemEventMessage(regionItem, eventData, sp);
                                 regionItem.EventChannel.Publish(message);
+                            }
+                        }
+                        else if ((byte)regionItem.Type == (byte)ItemType.Resource)
+                        {
+                            float distanceToRes2 = (regionItem.Position - Avatar.Position).Len2;
+                            if (distanceToRes2 < GlobalVars.playerShipRadius2 + GlobalVars.HPradius2)
+                            {
+                                log.InfoFormat("hp collide");
+
+                                if (removeList == null)
+                                    removeList = new List<Tuple<Item, Region>>();
+                                removeList.Add(new Tuple<Item, Region>(regionItem, reg));   // set bullet to be removed
+
+                                SendParameters sp = GetDefaultSP();
+                                var eventInstance = new HpEvent
+                                {
+                                    ItemId = Avatar.Id,
+                                    HpChange = -GlobalVars.HPboxvalue,
+                                };
+                                var eventData = new EventData((byte)EventCode.HpEvent, eventInstance);
+                                var message = new ItemEventMessage(regionItem, eventData, sp);
+                                regionItem.EventChannel.Publish(message);
+
                             }
                         }
                     } //foreach item in region
@@ -704,7 +754,9 @@ namespace Photon.MmoDemo.Server
                     } //end of if bomb exploded
 
                     ((Bomb)item.Value).DecreaseLife(elapsedSeconds);
-                    
+
+                    if (item.Value.Velocity.Len2 > GlobalVars.maxBombVel2)
+                        item.Value.Velocity = item.Value.Velocity * GlobalVars.bombDamp;
                     Vector newPos = item.Value.Position + item.Value.Velocity * elapsedSeconds;
 
                     if ((new Random()).Next(10) < 2)
@@ -1061,9 +1113,9 @@ namespace Photon.MmoDemo.Server
             }
 
             // bot test code
-            Random r = new Random();
-            if (r.Next(100) < 3)
-                AddBotToWorld();
+          //  Random r = new Random();
+          //  if (r.Next(100) < 3)
+          //      AddBotToWorld();
 
 
             // don't send response
@@ -1522,7 +1574,7 @@ namespace Photon.MmoDemo.Server
         }
         private OperationResponse OperationFireBulletHelper(Item item, FireBullet operation, SendParameters sendParameters, int roundTripTime)
         {
-            log.InfoFormat("player rot: {0}", this.Avatar.Rotation.ToString());
+          //  log.InfoFormat("player rot: {0}", this.Avatar.Rotation.ToString());
 
             // should always be OK
             MethodReturnValue result = this.CheckAccess(item);

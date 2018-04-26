@@ -140,7 +140,7 @@ namespace Photon.MmoDemo.Client
                     Vector rot = (Vector)eventData[(byte)ParameterCode.Rotation];
                     newbullet.SetPositions(pos, pos, rot, rot);
                     AddItem(newbullet);
-               //     System.IO.File.AppendAllText(@"C:\client-" + Avatar.Id + ".log", line);
+               //     System.IO.File.AppendAllText(@"D:\client-" + Avatar.Id + ".log", line);
                     return;
 
                 case EventCode.SaberSpawn:
@@ -152,7 +152,7 @@ namespace Photon.MmoDemo.Client
                     }
                //     else
                 //        line += "saber fire no such player " + itemId;
-             //       System.IO.File.AppendAllText(@"C:\client-" + Avatar.Id + ".log", line);
+             //       System.IO.File.AppendAllText(@"D:\client-" + Avatar.Id + ".log", line);
                     return;
 
                 case EventCode.BotSpawn:
@@ -163,11 +163,11 @@ namespace Photon.MmoDemo.Client
                     Vector Rot = (Vector)eventData[(byte)ParameterCode.Rotation];
                     newbot.SetPositions(Pos, Pos, Rot, Rot);
                     AddItem(newbot);
-              //      System.IO.File.AppendAllText(@"C:\client-" + Avatar.Id + ".log", line);
+              //      System.IO.File.AppendAllText(@"D:\client-" + Avatar.Id + ".log", line);
                     return;
                 case EventCode.BombSpawn:
                     
-                   // System.IO.File.AppendAllText(@"C:\client-" + Avatar.Id + ".log", line);
+                   // System.IO.File.AppendAllText(@"D:\client-" + Avatar.Id + ".log", line);
                     itemId = (string)eventData[(byte)ParameterCode.ItemId];
                     Vector bombpos = (Vector)eventData[(byte)ParameterCode.Position];
                     
@@ -175,8 +175,8 @@ namespace Photon.MmoDemo.Client
                     Vector bombRot = new Vector(0, 0);
                     newBomb.SetPositions(bombpos, bombpos, bombRot, bombRot);
                     AddItem(newBomb);
-                    line += "adding bomb id: " + itemId + "\n";
-                    System.IO.File.AppendAllText(@"C:\client-" + Avatar.Id + ".log", line);
+                 //   line += "adding bomb id: " + itemId + "\n";
+                  //  System.IO.File.AppendAllText(@"D:\client-" + Avatar.Id + ".log", line);
                     this.listener.OnBombSpawn(itemId);
                     return;
 
@@ -274,8 +274,10 @@ namespace Photon.MmoDemo.Client
             if (!this.TryGetItem(itemId, out item)) // register item first time seen 
             {
                 item = new Item(this, itemId, itemType);
-        //        string line = "subscribed adding item: " + item.Id + "\n";
-         //       System.IO.File.AppendAllText(@"C:\client-" + Avatar.Id+ ".log", line);
+                if (itemType == ItemType.Resource)
+                    item.SetPositions(position, position, rotation, rotation);
+               // string line = "subscribed adding item: " + item.Id + "\n";
+               // System.IO.File.AppendAllText(@"D:\client-" + Avatar.Id+ ".log", line);
                 this.AddItem(item);
                 item.GetProperties();
             } 
