@@ -93,6 +93,9 @@ namespace Photon.MmoDemo.Server
 
         private static readonly ILogger log = LogManager.GetCurrentClassLogger();
 
+        public float secSinceBursted;
+        public bool wasBursted;
+
 
         public Item(Vector position, Vector rotation, Hashtable properties, MmoActorOperationHandler owner, string id, byte type, World world)
         {
@@ -112,6 +115,7 @@ namespace Photon.MmoDemo.Server
             this.world = world;
             this.type = type;
             this.Velocity = new Vector(0, 0);
+            wasBursted = false;
         }
 
         //public Item(Vector position, Vector rotation, Hashtable properties, MmoActorOperationHandler owner,

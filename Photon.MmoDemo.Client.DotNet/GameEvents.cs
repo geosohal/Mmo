@@ -132,6 +132,12 @@ namespace Photon.MmoDemo.Client
                     this.listener.OnHpChange(itemId, hpchange);
                     return;
 
+
+                case EventCode.Burst:
+                    Vector burstpos = (Vector)eventData[(byte)ParameterCode.Position];
+                    this.listener.OnBurst(burstpos);
+                    return;
+
                 case EventCode.BulletSpawn:
                     itemId = (string)eventData[(byte)ParameterCode.ItemId];
                 //    line += " id: " + itemId + "\n";

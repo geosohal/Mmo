@@ -46,6 +46,8 @@ namespace Photon.MmoDemo.Client
 
         void OnBombExplode(string itemId, Vector position);
 
+        void OnBurst(Vector position);
+
         void OnWorldEntered();
     }
 }

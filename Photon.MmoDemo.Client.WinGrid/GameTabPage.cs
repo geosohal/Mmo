@@ -519,6 +519,10 @@ namespace Photon.MmoDemo.Client.WinGrid
 
         }
 
+        public void OnBurst(Vector position)
+        {
+        }
+
         public void OnBombSpawn(string itemId)
         {
 

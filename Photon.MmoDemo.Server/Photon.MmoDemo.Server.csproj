@@ -80,6 +80,7 @@
     <Compile Include="Events\BotSpawn.cs" />
     <Compile Include="Events\BulletExpired.cs" />
     <Compile Include="Events\BulletSpawn.cs" />
+    <Compile Include="Events\BurstEvent.cs" />
     <Compile Include="Events\CounterDataEvent.cs" />
     <Compile Include="Events\HpEvent.cs" />
     <Compile Include="Events\ItemDestroyed.cs" />

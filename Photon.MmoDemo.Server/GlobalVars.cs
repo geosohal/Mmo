@@ -29,23 +29,25 @@ namespace Photon.MmoDemo.Server
         public static float playerShipRadius2 = 660f;    // radius squared
         public static float playerShipRadius = 25.6904652f;
         public static int bulletDamage = 8;
-        public static int playerHitPoints = 100;    // also in clientside ItemBehavior
+        public static int playerHitPoints = 500;    // also in clientside ItemBehavior
 
         public static int maxShipVel = 180;
         public static int maxShipVelSq = 32400;
 
         public static int megaMaxVel = 600;
         public static int megaMaxVelSq = 360000;
-        public static int megaFadePerSec = 35;
+        public static int megaFadePerSec = 55;
+        public static float burstDampening = .998f;
+        public static float timeForBurstToLast = 2f;
 
-        public static float breaksDampFactor = .8f;
+        public static float breaksDampFactor = .85f;
 
         public static float burstRadius = 900f;
         public static float burstRadiusSq = 810000f;
         public static float burstForce = 4000f;
 
-        public static int saberDmgPerFrame = 5;
-        public static float saberOnTime = 14f;   // in client: saberTimeLeft
+        public static int saberDmgPerFrame = 7;
+        public static float saberOnTime = 9f;   // in client: saberTimeLeft
         public static float saberLength = 200f;
         public static float saberStart = 50f;
         public static float laserStart = 100f;
@@ -65,7 +67,7 @@ namespace Photon.MmoDemo.Server
         public static float bombBallRadius2 = 729;
         public static float maxBombVel = 600;
         public static float maxBombVel2 = 360000;
-        public static float bombDamp = .9f;
+        public static float bombDamp = .92f;
 
         public static int HPboxvalue = 20;
         public static int HPboxCount = 0;   // counter that we increment to make hp item ids
