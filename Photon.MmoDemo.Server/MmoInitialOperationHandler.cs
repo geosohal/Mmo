@@ -124,7 +124,7 @@ namespace Photon.MmoDemo.Server
         /// If another MmoActor with the same name exists he is disconnected.
         /// An OperationResponse with error code ReturnCode.Ok is published on success.
         /// </remarks>
-        public OperationResponse OperationEnterWorld(PeerBase peer, OperationRequest request, SendParameters sendParameters)
+        public OperationResponse OperationEnterWorld(PeerBase peer, OperationRequest request, SendParameters sendParameters, bool isBotMan)
         {
             var operation = new EnterWorld(peer.Protocol, request);
             if (!operation.IsValid)
@@ -150,6 +150,7 @@ namespace Photon.MmoDemo.Server
 
             while (world.ItemCache.AddItem(avatar) == false)
             {
+                log.InfoFormat("add item was false ");
                 Item otherAvatarItem;
                 if (world.ItemCache.TryGetItem(avatar.Id, out otherAvatarItem))
                 {
@@ -189,8 +190,11 @@ namespace Photon.MmoDemo.Server
                 interestArea.UpdateInterestManagement();
             }
 
-            avatar.Spawn(operation.Position);
-            world.Radar.AddItem(avatar, operation.Position);
+            if (!isBotMan)
+            {
+                avatar.Spawn(operation.Position);
+                world.Radar.AddItem(avatar, operation.Position);
+            }
 
             // response already sent
             return null;
@@ -230,7 +234,7 @@ namespace Photon.MmoDemo.Server
 
                 case OperationCode.EnterWorld:
                     {
-                        return this.OperationEnterWorld(peer, operationRequest, sendParameters);
+                        return this.OperationEnterWorld(peer, operationRequest, sendParameters, false);
                     }
 
                 case OperationCode.RadarSubscribe:

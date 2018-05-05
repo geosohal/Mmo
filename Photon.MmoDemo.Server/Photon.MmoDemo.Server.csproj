@@ -77,6 +77,7 @@
   <ItemGroup>
     <Compile Include="ClientInterestArea.cs" />
     <Compile Include="CounterOperations.cs" />
+    <Compile Include="DummyPeer.cs" />
     <Compile Include="Events\BotSpawn.cs" />
     <Compile Include="Events\BulletExpired.cs" />
     <Compile Include="Events\BulletSpawn.cs" />
@@ -111,6 +112,7 @@
     <Compile Include="MmoActorOperationHandler.cs" />
     <Compile Include="MmoInitialOperationHandler.cs" />
     <Compile Include="MmoPeer.cs" />
+    <Compile Include="NStateBuffer.cs" />
     <Compile Include="Operations\AddInterestArea.cs" />
     <Compile Include="Operations\AttachInterestArea.cs" />
     <Compile Include="Operations\CreateWorld.cs" />

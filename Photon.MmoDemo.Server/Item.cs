@@ -81,11 +81,7 @@ namespace Photon.MmoDemo.Server
 
 
 
-        protected NetworkState[] posBuffer = new NetworkState[20];  // previous positions used for rewind
-        protected int currBufferIndex = 0;  // index of latest network state
-        protected int posSetCount = 0;  // count for times position has been set
-                                        // some assumptions about the buffer: SetPos() is called once per network update cycle and
-                                        // network update cycles are roughly fixed size to be optimized, but it will still work if not fixed size
+        protected NStateBuffer nbuffer;
 
             // we're keeping a seperate buffer for rotations for now, this will need to be united with the rest soon
         protected Vector[] rotBuffer = new Vector[20];
@@ -95,6 +91,7 @@ namespace Photon.MmoDemo.Server
 
         public float secSinceBursted;
         public bool wasBursted;
+       // public bool IsThrusting;
 
 
         public Item(Vector position, Vector rotation, Hashtable properties, MmoActorOperationHandler owner, string id, byte type, World world)
@@ -115,6 +112,7 @@ namespace Photon.MmoDemo.Server
             this.world = world;
             this.type = type;
             this.Velocity = new Vector(0, 0);
+         //   IsThrusting = false;
             wasBursted = false;
         }
 
@@ -173,17 +171,6 @@ namespace Photon.MmoDemo.Server
 
         public Vector Position { get; private set; }
 
-        public Vector GetLastRot()
-        {
-            if (posSetCount > 1)
-            {
-                int lastRotIndex = (currBufferIndex - 1) % 20;
-                if (posBuffer[lastRotIndex].rot != null)
-                    return (Vector)posBuffer[lastRotIndex].rot;
-            }
-            return Rotation;
-        }
-
         public float GetCumulativeDotProducts(int howManyFrames)
         {
             bool printDebug = false;
@@ -209,111 +196,21 @@ namespace Photon.MmoDemo.Server
 
         public void SetPos(Vector val, double totalTimeInMS)
         {
-            NetworkState nextState = new NetworkState();
-            nextState.pos = val;
-            nextState.totalMs = totalTimeInMS;
-            nextState.rot = Rotation;
-
+            AddNetworkState(val, (float)totalTimeInMS);
             Position = val;
-            posBuffer[currBufferIndex] = nextState;
-            currBufferIndex++;
-            currBufferIndex = currBufferIndex % 20;
-            if (posSetCount < 20)
-                posSetCount++;
         }
 
-        public void SetPosRot(Vector pos, Vector rot, double totalTimeInMS)
-        {
-            NetworkState nextState = new NetworkState();
-            nextState.pos = pos;
-            nextState.rot = rot;
-            nextState.totalMs = totalTimeInMS;
 
-            Position = pos;
-            posBuffer[currBufferIndex] = nextState;
-            currBufferIndex++;
-            currBufferIndex = currBufferIndex % 20;
-            if (posSetCount < 20)
-                posSetCount++;
+        private void AddNetworkState(Vector pos, float totalMs)
+        {
+            nbuffer.AddNetworkState(pos, totalMs);
         }
 
         public void SetPos(Vector val)
         {
             Position = val;
         }
-
-        // get position, from buffer, that goes back to the timestamp totalms
-        public Vector GetRewindedPos(double totalms)
-        {
-            if (posSetCount < 1)
-            {
-                log.InfoFormat("warning: rewind requested when buffer is empty");
-                return Position;
-            }
-            else if (posSetCount == 1)
-            {
-                log.InfoFormat("warning: rewind requested when buffer has 1 element");
-                return posBuffer[currBufferIndex].pos;
-            }
-            else
-            {
-                // get the interval of the time between two buffer recordings to use as an estimate of all intervals
-                double bufferIntervalEstimate = posBuffer[currBufferIndex].totalMs - posBuffer[(currBufferIndex - 1) % 20].totalMs;
-                int stepsBack = (int)Math.Floor(totalms / bufferIntervalEstimate); //estimated steps back in buffer
-                if (stepsBack > 20)
-                {
-                    log.InfoFormat("error: rewind requested more than 20 steps back, some one is lagged out?");
-                    return posBuffer[(currBufferIndex - posSetCount) % 20].pos; // return oldest pos
-                }
-                else if (stepsBack > posSetCount) //stepping back more than we have buffer recordings
-                {
-                    log.InfoFormat("warning: potentially rewinding back further than we have info for");
-                    // start at the oldest position and if we need to move to newer positions until we have a match, do so
-                    int ansBufferIndex = RewindHelperGetRightIndex(totalms, stepsBack);
-                    return posBuffer[ansBufferIndex].pos;
-                }
-                else 
-                {
-                    
-                    if (totalms > posBuffer[currBufferIndex].totalMs)
-                        return posBuffer[currBufferIndex].pos;
-
-                    int ansIndexRight = RewindHelperGetRightIndex(totalms, stepsBack+1);
-                    int ansIndexLeft = (ansIndexRight-1)% 20;
-                    if (totalms < posBuffer[ansIndexRight].totalMs && totalms > posBuffer[ansIndexLeft].totalMs)
-                    {
-                        float tlerp = (float)((totalms - posBuffer[ansIndexLeft].totalMs) /
-                            (posBuffer[ansIndexRight].totalMs - posBuffer[ansIndexLeft].totalMs));
-                        return posBuffer[ansIndexRight].pos * tlerp + posBuffer[ansIndexLeft].pos * (1 - tlerp);
-                    }
-                    else
-                    {
-                        log.InfoFormat("ERROR rewind something went wrong");
-                        return posBuffer[ansIndexRight].pos;
-                    }
-
-                }
-            }
-        }
-
-        // to be optimized this should only be called if totalMS is smaller thant the largest timestamp in buffer
-        private int RewindHelperGetRightIndex(double totalMS, int stepsBack)
-        {
-            int ansBufferIndex = (currBufferIndex - Math.Min(posSetCount, stepsBack)) % 20 - 1;
-            double oldestTime;
-            do
-            {
-                ansBufferIndex++;
-                oldestTime = posBuffer[ansBufferIndex%20].totalMs;
-                if (ansBufferIndex > 40)    //todo: remove if it doesnt happen
-                {
-                    log.InfoFormat("error: rewind infinite loop situation");
-                    return 1;
-                }
-            } while (oldestTime < totalMS);
-            return ansBufferIndex;
-        }
-
+        
         public MessageChannel<ItemPositionMessage> PositionUpdateChannel { get { return this.positionUpdateChannel; } }
 
         public Hashtable Properties { get { return this.properties; } }
@@ -388,53 +285,7 @@ namespace Photon.MmoDemo.Server
             );
         }
 
-
-        ///// <summary>
-        ///// Publishes a ItemPositionRotationMessage in the PositionUpdateChannel
-        ///// Subscribes and unsubscribes regions if changed. 
-        ///// </summary>
-        //public void UpdateInterestManagementWithRot()
-        //{
-        //    // inform attached interst area and radar
-        //    ItemPositionRotationMessage message = this.GetPosRotUpdateMessage(this.Position, this.Rotation);
-        //    this.positionUpdateChannel.Publish(message);
-
-        //    // update subscriptions if region changed
-        //    Region prevRegion = this.CurrentWorldRegion;
-        //    Region newRegion = this.World.GetRegion(this.Position);
-
-        //    if (newRegion != this.CurrentWorldRegion)
-        //    {
-        //        this.CurrentWorldRegion = newRegion;
-
-        //        if (this.regionSubscription != null)
-        //        {
-        //            this.regionSubscription.Dispose();
-        //        }
-
-        //        var snapshot = this.GetItemSnapshot();
-        //        var regMessage = new ItemRegionChangedMessage(prevRegion, newRegion, snapshot);
-
-        //        if (prevRegion != null)
-        //        {
-        //            prevRegion.DelistItem(this);    // remove from regions item list
-        //            prevRegion.ItemRegionChangedChannel.Publish(regMessage);
-        //        }
-        //        if (newRegion != null)
-        //        {
-        //            newRegion.EnlistItem(this);     // add to regions item list
-        //            newRegion.ItemRegionChangedChannel.Publish(regMessage);
-
-        //            this.regionSubscription = new UnsubscriberCollection(
-        //                this.EventChannel.Subscribe(this.Fiber, (m) => newRegion.ItemEventChannel.Publish(m)), // route events through region to interest area
-        //                newRegion.RequestItemEnterChannel.Subscribe(this.Fiber, (m) => { m.InterestArea.OnItemEnter(this.GetItemSnapshot()); }), // region entered interest area fires message to let item notify interest area about enter
-        //                newRegion.RequestItemExitChannel.Subscribe(this.Fiber, (m) => { m.InterestArea.OnItemExit(this); }) // region exited interest area fires message to let item notify interest area about exit
-        //            );
-        //        }
-
-        //    }
-        //}
-
+        
 
         /// <summary>
         /// Updates the Properties and increments the PropertiesRevision.

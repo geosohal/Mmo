@@ -50,7 +50,8 @@ namespace Photon.MmoDemo.Server
         // because mobs/bots are not not inherently related to the player. they relate to the world by
         // bein inside it.
         // put it here because Item needs a Peer to initialize an item
-        BotManager botman;
+        //BotManager botman;
+
         Random random;
         bool firstUpdate;
 
@@ -69,13 +70,16 @@ namespace Photon.MmoDemo.Server
             watch.Start();
             isMegaThrusting = false;
             currMaxVel = GlobalVars.maxShipVel;
-            botman = new BotManager();
+
             isBursting = false;
             isSaberOut = false;
             isBombOut = false;
             random = new Random();
             firstUpdate = true;
-            
+
+            // if this is the first peer connecting then bot manager isnt initialized
+            if (BotManager.IsInitialized == false)
+                BotManager.InitializeManager(world);
         }
 
         private Vector GetRandomPosition()
@@ -102,7 +106,7 @@ namespace Photon.MmoDemo.Server
 
             UpdateMyProjectiles(msElapse);
             UpdateAvatarPos(msElapse);
-            botman.UpdateBots(msElapse, GetDefaultSP());
+    //        botman.UpdateBots(msElapse, GetDefaultSP());
           //  log.InfoFormat("asdasd: " + ts.Milliseconds.ToString());
 
            
@@ -131,7 +135,7 @@ namespace Photon.MmoDemo.Server
             }
             // if avatar is over the usualy max speed and isn't megatthrustic then it just came out
             // of a mega thrust and we need to ease it's spee bakc to normal
-            if (Avatar.Velocity.Len2 > GlobalVars.maxShipVelSq && !isMegaThrusting)
+            if (Avatar.Velocity.Len2 > GlobalVars.maxShipVelSq+10 && !isMegaThrusting)
             {
                 if (Avatar.wasBursted)
                 {
@@ -141,6 +145,7 @@ namespace Photon.MmoDemo.Server
                 }
                 else
                 {
+                    log.InfoFormat("reducing booster");
                     currMaxVel -= GlobalVars.megaFadePerSec * elapsedSeconds;
                     Avatar.Velocity = Vector.Normalized(Avatar.Velocity) * currMaxVel;
                 }
@@ -171,7 +176,7 @@ namespace Photon.MmoDemo.Server
             Avatar.EventChannel.Publish(message);
         }
 
-        private SendParameters GetDefaultSP()
+        public static SendParameters GetDefaultSP()
         {
             SendParameters sp = new SendParameters();
             sp.ChannelId = Settings.ItemEventChannel;
@@ -1710,25 +1715,25 @@ namespace Photon.MmoDemo.Server
 
         private void AddBotToWorld()
         {
-            Item newbot = botman.AddBot(Avatar.Position, Avatar.Position, 20f, this, world);
-            newbot.World.ItemCache.AddItem(newbot);
-            AddItem(newbot);
-            newbot.UpdateRegionSimple();
+            //Item newbot = botman.AddBot(Avatar.Position, Avatar.Position, 20f, this, world);
+            //newbot.World.ItemCache.AddItem(newbot);
+            //AddItem(newbot);
+            //newbot.UpdateRegionSimple();
 
-            log.InfoFormat("adding bot to player");
-            // send event
-            var eventInstance = new BotSpawn
-            {
-                ItemId = newbot.Id,
-                Position = newbot.Position,
-                Rotation = newbot.Rotation,
-            };
+            //log.InfoFormat("adding bot to player");
+            //// send event
+            //var eventInstance = new BotSpawn
+            //{
+            //    ItemId = newbot.Id,
+            //    Position = newbot.Position,
+            //    Rotation = newbot.Rotation,
+            //};
 
-            SendParameters sp = GetDefaultSP();
-            sp.Unreliable = false;
-            var eventData = new EventData((byte)EventCode.BotSpawn, eventInstance);
-            var message = new ItemEventMessage(Avatar, eventData, sp);
-            Avatar.EventChannel.Publish(message); // anyone in the players event channel will need to spawn the bot
+            //SendParameters sp = GetDefaultSP();
+            //sp.Unreliable = false;
+            //var eventData = new EventData((byte)EventCode.BotSpawn, eventInstance);
+            //var message = new ItemEventMessage(Avatar, eventData, sp);
+            //Avatar.EventChannel.Publish(message); // anyone in the players event channel will need to spawn the bot
         }
 
         private OperationResponse OperationFireLaserHelper(Item item, FireLaser operation, SendParameters sendParameters)
@@ -1809,7 +1814,14 @@ namespace Photon.MmoDemo.Server
                   //  log.InfoFormat("applying rot" + operation.Rotation.ToString());
                     item.Rotation = operation.Rotation;
                 }
-                item.Velocity += operation.Velocity;
+                if (!operation.Velocity.IsZero)
+                {
+                    item.Velocity += operation.Velocity;
+                  //  item.IsThrusting = true;
+                }
+              //  else
+                 //   item.IsThrusting = false;
+
                 if (operation.IsMegaThrust != null && operation.IsMegaThrust)
                 {
                   //  log.InfoFormat("mEGA thursting");

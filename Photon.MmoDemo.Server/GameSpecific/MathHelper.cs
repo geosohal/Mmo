@@ -16,6 +16,8 @@ namespace Photon.MmoDemo.Server.GameSpecific
 
     public class MathHelper
     {
+
+        private static Random rand;
         //public static bool Intersects(Vector circlePos, float circleRad, Rect rect)
         //{
         //    Vector circleDistance = new Vector();
@@ -98,5 +100,32 @@ namespace Photon.MmoDemo.Server.GameSpecific
             Vector closest = projV + segA;
             return closest;
         }
+
+        public static Vector GetRandomVector(float length)
+        {
+            return RandomDirection() * length;
+        }
+
+        public static Vector RandomDirection()
+        {
+            double azimuth = ((new Random()).NextDouble() * 2.0 * Math.PI);
+            return new Vector((float)Math.Cos(azimuth), (float)Math.Sin(azimuth));
+        }
+
+
+        public static float Lerp(float a, float b, float t)
+        {
+            return a + (b - a) * Clamp01(t);
+        }
+
+        public static float Clamp01(float t)
+        {
+            if (t > 1)
+                return 1f;
+            else if (t < 0)
+                return 0;
+            return t;
+        }
     }
+
 }

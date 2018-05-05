@@ -96,6 +96,13 @@ namespace Photon.MmoDemo.Common
             return vec;
         }
 
+        public static Vector Lerp(Vector a, Vector b, float t)
+        {
+            if (t > 1) t = 1f;
+            else if (t < 0) t = 0f;
+            return new Vector(a.X + (b.X - a.X) * t, a.Y + (b.Y - a.Y) * t);
+        }
+
         public override string ToString()
         {
             return string.Format("{0}({1:0.00}, {2:0.00})", "V", X, Y);
