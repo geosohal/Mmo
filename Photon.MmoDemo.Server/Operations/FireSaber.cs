@@ -46,4 +46,72 @@
         [DataMember(Code = (byte)ParameterCode.ItemId)]
         public string ItemId { get; set; }
     }
+
+
+
+
+
+    public class StartSuperFast : Operation
+    {
+        public StartSuperFast(IRpcProtocol protocol, OperationRequest request)
+            : base(protocol, request)
+        {
+        }
+
+        // ItemId is the id of the player who fired the Saber
+        [DataMember(Code = (byte)ParameterCode.ItemId)]
+        public string ItemId { get; set; }
+
+        [DataMember(Code = (byte)ParameterCode.Rotation)]
+        public Vector Rotation { get; set; }
+
+        public OperationResponse GetOperationResponse(short errorCode, string debugMessage)
+        {
+            var responseObject = new StartSuperFastResponse { ItemId = this.ItemId };
+            return new OperationResponse(this.OperationRequest.OperationCode, responseObject) { ReturnCode = errorCode, DebugMessage = debugMessage };
+        }
+
+        public OperationResponse GetOperationResponse(MethodReturnValue returnValue)
+        {
+            return this.GetOperationResponse(returnValue.Error, returnValue.Debug);
+        }
+    }
+
+    public class StartSuperFastResponse
+    {
+        [DataMember(Code = (byte)ParameterCode.ItemId)]
+        public string ItemId { get; set; }
+    }
+
+    /// <summary>
+    /// operation that ends super fast mode
+    /// </summary>
+    public class EndSuperFast : Operation
+    {
+        public EndSuperFast(IRpcProtocol protocol, OperationRequest request)
+            : base(protocol, request)
+        {
+        }
+
+        // ItemId is the id of the player who fired the Saber
+        [DataMember(Code = (byte)ParameterCode.ItemId)]
+        public string ItemId { get; set; }
+
+        public OperationResponse GetOperationResponse(short errorCode, string debugMessage)
+        {
+            var responseObject = new EndSuperFastResponse { ItemId = this.ItemId };
+            return new OperationResponse(this.OperationRequest.OperationCode, responseObject) { ReturnCode = errorCode, DebugMessage = debugMessage };
+        }
+
+        public OperationResponse GetOperationResponse(MethodReturnValue returnValue)
+        {
+            return this.GetOperationResponse(returnValue.Error, returnValue.Debug);
+        }
+    }
+
+    public class EndSuperFastResponse
+    {
+        [DataMember(Code = (byte)ParameterCode.ItemId)]
+        public string ItemId { get; set; }
+    }
 }

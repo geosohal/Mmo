@@ -48,7 +48,11 @@ namespace Photon.MmoDemo.Common
 
         BombSpawn,
 
-        BombExplosion
+        BombExplosion,
+
+        StartSuperFast,
+
+        EndSuperFast
 
 
 

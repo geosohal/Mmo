@@ -35,6 +35,11 @@ namespace Photon.MmoDemo.Server
         {
             return (timeToLive > 0);
         }
+
+        public void SetDead()
+        {
+            timeToLive = -1f;
+        }
     }
 
     public class Bomb : Item

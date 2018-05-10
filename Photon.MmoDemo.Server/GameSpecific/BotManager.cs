@@ -30,7 +30,8 @@ namespace Photon.MmoDemo.Server.GameSpecific
         public Vector currTargetPos;
         public BotState state;
         public BotType type;
-        public int hp;
+        private int hp;
+        public bool isDead;
 
         private MobMother mother;
 
@@ -46,22 +47,28 @@ namespace Photon.MmoDemo.Server.GameSpecific
                 hp = GlobalVars.StrongMobHP;
             else if (type == BotType.Mother)
                 hp = GlobalVars.MotherHP;
-
-          //  ChooseNewTargetPosAndSetVel();
+            isDead = false;
         }
 
         public void ChooseNewTargetPosAndSetVel()
         {
+            if (mobItem.Disposed)
+                return;
             Vector randNearbyPos;
             do
             {
-                GlobalVars.log.InfoFormat("trying pos");
-                float randLength = (float)(new Random()).Next() * GlobalVars.patrolRoamDistance;
+               // GlobalVars.log.InfoFormat("trying pos");
+                float randLength = (float)(new Random()).NextDouble() * GlobalVars.patrolRoamDistance;
                 randNearbyPos = mobItem.Position + MathHelper.GetRandomVector(randLength);
             } while ((randNearbyPos - mother.mobItem.Position).Len2 < GlobalVars.MaxDistFromMotherSq);
             
             currTargetPos = randNearbyPos;
-            GlobalVars.log.InfoFormat("set new target pos" + currTargetPos.ToString());
+            //  GlobalVars.log.InfoFormat("set new target pos" + currTargetPos.ToString());
+            SetVelToTarget();
+        }
+
+        private void SetVelToTarget()
+        {
             Vector moveDir = Vector.Normalized(currTargetPos - mobItem.Position);
             if (type == BotType.Swarm)
                 mobItem.Velocity = moveDir * GlobalVars.SwarmSpeed;
@@ -72,25 +79,57 @@ namespace Photon.MmoDemo.Server.GameSpecific
             mobItem.Rotation = moveDir;
         }
 
+        public void TakeDamage(int amount)
+        {
+            hp -= amount;
+            //if (hp <= 0)
+             //  DestroyMob();
+        }
+
+        public void UpdateState(float elapsedSeconds)
+        {
+            if (hp <= 0 && isDead == false)
+              DestroyMob();
+        }
+
         public void UpdatePosition(float elapsedSeconds, SendParameters sp)
         {
+            if (mobItem.Disposed)
+                return;
             Vector oldPosition = mobItem.Position;
 
             float distToTargetSq = (currTargetPos - oldPosition).Len2;
-            if (distToTargetSq < 1000)
+            if (distToTargetSq < 1000 || distToTargetSq > GlobalVars.MaxDistFromMotherSq)
             {
                 ChooseNewTargetPosAndSetVel();
-                GlobalVars.log.InfoFormat(mobItem.Id + "chose new velo");
+              //  GlobalVars.log.InfoFormat(mobItem.Id + "chose new velo");
             }
 
-            if ((new Random()).Next(16) < 2)
+            if (mobItem.wasBursted)
             {
-                GlobalVars.log.InfoFormat("curr.Targ " + currTargetPos.ToString());
-                GlobalVars.log.InfoFormat("curr Pos " + oldPosition.ToString());
-                GlobalVars.log.InfoFormat("dist to target sq " + distToTargetSq.ToString());
+                mobItem.secSinceBursted -= elapsedSeconds;
+                if (mobItem.secSinceBursted <= 0)
+                    mobItem.wasBursted = false;
             }
 
+            if (mobItem.Velocity.Len2 > GlobalVars.maxShipVelSq+1)
+            {
+               // if (mobItem.wasBursted)
+                {
+                    mobItem.Velocity = mobItem.Velocity * GlobalVars.burstDampening;
+                    SetVelToTarget();
+                }
+            }
+
+            //mobItem.Move(oldPosition + mobItem.Velocity * elapsedSeconds);
             mobItem.SetPos(oldPosition + mobItem.Velocity * elapsedSeconds);
+            mobItem.UpdateRegionSimple();
+
+
+            if (GlobalVars.TrueTenPercent)
+            {
+            //    GlobalVars.log.InfoFormat("mob Pos " + oldPosition.ToString());
+            }
 
             // send event
             var eventInstance = new ItemMoved
@@ -104,6 +143,45 @@ namespace Photon.MmoDemo.Server.GameSpecific
             var eventData = new EventData((byte)EventCode.ItemMoved, eventInstance);
             var message = new ItemEventMessage(mobItem, eventData, sp);
             mobItem.EventChannel.Publish(message);
+        }
+
+        public void CheckCollisions(float elapsedSeconds, SendParameters sp, MmoPeer serverPeer)
+        {
+            if (mobItem.Disposed)
+                return;
+
+            float radius = GlobalVars.swarmShipRadius;
+            if ((type == BotType.Swarm))
+                radius = GlobalVars.swarmShipRadius;
+            else if (type == BotType.Mother)
+                radius = GlobalVars.motherShipRadius;
+            float radiusSq = radius * radius;
+            foreach (Item regionItem in mobItem.CurrentWorldRegion.myitems)
+            {
+              //  if (regionItem.Type == (byte)ItemType.Bullet)
+             //       GlobalVars.log.InfoFormat("mob col check w " + regionItem.Id.ToString());
+                if (CollisionHelper.CheckItemCollisionAgainstProjectile(mobItem, regionItem,
+                    ref this.hp, sp, null, radiusSq, radius))
+                {
+                    // check if mob is dead
+                    if (this.hp <= 0)
+                    {
+                        GlobalVars.log.InfoFormat("mob killed " + mobItem.Id);
+                        DestroyMob();
+                    }
+                }
+            }
+        }
+
+        // destroys mob, note it doesnt remove itself from the mother that must be done later
+        public void DestroyMob()
+        {
+            isDead = true;
+            mobItem.Destroy();
+            mobItem.Dispose();
+            mobItem.CurrentWorldRegion.myitems.Remove(mobItem);
+            mobItem.World.ItemCache.RemoveItem(mobItem.Id);
+            BotManager.mobTable.Remove(mobItem.Id);
         }
     }
 
@@ -138,17 +216,21 @@ namespace Photon.MmoDemo.Server.GameSpecific
         private static Stopwatch watch;
         private static World world;
         private static float timeTillMotherSpawn;
+        private static SendParameters Sp;
+        public static Dictionary<string, Mob> mobTable;
         
 
         static BotManager()
         {
             motherMobs = new List<MobMother>();
+            mobTable = new Dictionary<string, Mob>();
             r = new Random(52);
             IsInitialized = false;
         }
 
-        public static void InitializeManager(World world)
+        public static void InitializeManager(World world, SendParameters sp)
         {
+            Sp = sp;
             IsInitialized = true;
             BotManager.world = world;
             DummyPeer dp = new DummyPeer(SocketServer.Protocol.GpBinaryV162, "botmn");
@@ -176,7 +258,7 @@ namespace Photon.MmoDemo.Server.GameSpecific
             request.Parameters.Add((byte)ParameterCode.ViewDistanceExit, new Vector(800f, 800f));
 
             SendParameters sp = MmoActorOperationHandler.GetDefaultSP();
-            sp.Unreliable = false;
+       //     sp.Unreliable = false;
             ((MmoInitialOperationHandler)serverPeer.CurrentOperationHandler).OperationEnterWorld(
                 serverPeer, request, sp, true);
 
@@ -200,41 +282,54 @@ namespace Photon.MmoDemo.Server.GameSpecific
 
             if (motherMobs.Count < GlobalVars.MaxMotherBots && timeTillMotherSpawn <= 0)
             {
-                Vector pos = GetRandomPosition();
+                Vector pos = GetRandomCentralPosition();
                 AddMotherBotHelper(pos, world);
                 timeTillMotherSpawn = GlobalVars.SecForMotherToRespawn;
             }
 
+
             foreach (MobMother mm in motherMobs)
             {
+                if (mm.isDead && mm.childMobs.Count == 0)
+                {
+                    motherMobs.Remove(mm);
+                    break;
+                }
                 mm.timeTillNextSpawn -= elapsedSeconds;
                 // if its time to spawn next mob
-                if (mm.timeTillNextSpawn <= 0 && mm.childMobs.Count < GlobalVars.MaxSwarmPerMother)
+                if (!mm.isDead && mm.timeTillNextSpawn <= 0 && mm.childMobs.Count < GlobalVars.MaxSwarmPerMother)
                 {
                     // spawn next mob
                     Vector displacement = MathHelper.GetRandomVector(GlobalVars.SpawnDistFromMother);
                     Vector mobPos = mm.mobItem.Position + displacement;
                     AddMobToMotherrHelper(mobPos, mm, world);
 
-                    float t = mm.childMobs.Count / GlobalVars.MaxSwarmPerMother;
+                    float t = (float)mm.childMobs.Count / (float)GlobalVars.MaxSwarmPerMother;
                     mm.timeTillNextSpawn = MathHelper.Lerp(GlobalVars.SecMinForSwarmSpawn,
                         GlobalVars.SecMaxForSwarmSpawn, t);
                 }
 
-                // update positions of all children (also sends itemmoved event)
+                mm.CheckCollisions(elapsedSeconds, Sp, serverPeer);
+
                 foreach (Mob mob in mm.childMobs)
                 {
+                    // update positions of all children (also sends itemmoved event)
                     mob.UpdatePosition(elapsedSeconds, MmoActorOperationHandler.GetDefaultSP());
+                    mob.CheckCollisions(elapsedSeconds, Sp, serverPeer);
+                    mob.UpdateState(elapsedSeconds);
                 }
+
+                RemoveDeadMobsFromMother(mm);
             }
-
-
-
-
             watch = Stopwatch.StartNew();
         }
 
-   
+        // remove recently deceased mobs from list
+        private static void RemoveDeadMobsFromMother(MobMother mm)
+        {
+            mm.childMobs.RemoveAll(item => item.isDead == true);
+            
+        }
 
         private static void AddMotherBotHelper(Vector pos, World world)
         {
@@ -245,7 +340,7 @@ namespace Photon.MmoDemo.Server.GameSpecific
                 (MmoActorOperationHandler)serverPeer.CurrentOperationHandler, botId, (byte)ItemType.Bot, world);
             MobMother newMother = new MobMother(mobitem, BotType.Mother);
             motherMobs.Add(newMother);
-            SpawnMobHelper(mobitem);
+            SpawnMobHelper(newMother);
 
 
         }
@@ -260,28 +355,29 @@ namespace Photon.MmoDemo.Server.GameSpecific
             Mob newMob = new Mob(botitem, mother, BotType.Swarm);
             newMob.ChooseNewTargetPosAndSetVel();
             mother.childMobs.Add(newMob);
-            SpawnMobHelper(botitem);
+            SpawnMobHelper(newMob);
         }
 
-        private static void SpawnMobHelper(Item mobitem)
+        private static void SpawnMobHelper(Mob newMob)
         {
-            mobitem.World.ItemCache.AddItem(mobitem);
-            mobitem.UpdateRegionSimple();
+            mobTable.Add(newMob.mobItem.Id,newMob);
+            newMob.mobItem.World.ItemCache.AddItem(newMob.mobItem);
+            newMob.mobItem.UpdateRegionSimple();
 
             GlobalVars.log.InfoFormat("adding bot to botman");
             // send event
             var eventInstance = new BotSpawn
             {
-                ItemId = mobitem.Id,
-                Position = mobitem.Position,
-                Rotation = mobitem.Rotation,
+                ItemId = newMob.mobItem.Id,
+                Position = newMob.mobItem.Position,
+                Rotation = newMob.mobItem.Rotation,
             };
 
             SendParameters sp = MmoActorOperationHandler.GetDefaultSP();
-            sp.Unreliable = false;
+          //  sp.Unreliable = false;
             var eventData = new EventData((byte)EventCode.BotSpawn, eventInstance);
-            var message = new ItemEventMessage(mobitem, eventData, sp);
-            mobitem.EventChannel.Publish(message);
+            var message = new ItemEventMessage(newMob.mobItem, eventData, sp);
+            newMob.mobItem.EventChannel.Publish(message);
         }
 
         private static Vector GetRandomPosition()
@@ -290,5 +386,10 @@ namespace Photon.MmoDemo.Server.GameSpecific
             return world.Area.Min + new Vector { X = d.X * (float)r.NextDouble(), Y = d.Y * (float)r.NextDouble() };
         }
 
+        private static Vector GetRandomCentralPosition()
+        {
+            var d = (world.Area.Max - world.Area.Min)/2;
+            return (world.Area.Min+d/2) + new Vector { X = d.X * (float)r.NextDouble(), Y = d.Y * (float)r.NextDouble() };
+        }
     }
 }

@@ -77,4 +77,16 @@ namespace Photon.MmoDemo.Server.Events
         [DataMember(Code = (byte)ParameterCode.Rotation, IsOptional = true)]
         public Vector Rotation { get; set; }
     }
+
+    public class StartSuperFastEvent
+    {
+        [DataMember(Code = (byte)ParameterCode.ItemId)]
+        public string ItemId { get; set; }
+    }
+
+    public class EndSuperFastEvent
+    {
+        [DataMember(Code = (byte)ParameterCode.ItemId)]
+        public string ItemId { get; set; }
+    }
 }

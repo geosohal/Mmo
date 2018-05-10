@@ -168,6 +168,25 @@ namespace Photon.MmoDemo.Client
             game.SendOperation(OperationCode.FireSaber, data, sendReliable, Settings.ItemChannel);
         }
 
+        public static void StartSuperFast(Game game, string itemId, Vector rot, bool sendReliable)
+        {
+            var data = new Dictionary<byte, object>();
+            if (itemId != null)
+                data.Add((byte)ParameterCode.ItemId, itemId);
+            
+            data.Add((byte)ParameterCode.Rotation, rot);
+            game.SendOperation(OperationCode.StartSuperFast, data, sendReliable, Settings.ItemChannel);
+        }
+
+        public static void EndSuperFast(Game game, string itemId, bool sendReliable)
+        {
+            var data = new Dictionary<byte, object>();
+            if (itemId != null)
+                data.Add((byte)ParameterCode.ItemId, itemId);
+
+            game.SendOperation(OperationCode.EndSuperFast, data, sendReliable, Settings.ItemChannel);
+        }
+
         // todo: probably want to add playerid here to avoid friendly fire
         public static void FireLaser(Game game, string itemId, bool sendReliable)
         {

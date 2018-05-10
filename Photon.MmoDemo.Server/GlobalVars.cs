@@ -33,8 +33,8 @@ namespace Photon.MmoDemo.Server
         public static int bulletDamage = 8;
         public static int playerHitPoints = 500;    // also in clientside ItemBehavior
 
-        public static int maxShipVel = 180;
-        public static int maxShipVelSq = 32400;
+        public static int maxShipVel = 300;
+        public static int maxShipVelSq = 90000;
 
         public static int megaMaxVel = 600;
         public static int megaMaxVelSq = 360000;
@@ -44,11 +44,13 @@ namespace Photon.MmoDemo.Server
 
         public static float breaksDampFactor = .85f;
 
+        public static int SuperFastVel = 3600;
+
         public static float burstRadius = 900f;
         public static float burstRadiusSq = 810000f;
         public static float burstForce = 4000f;
 
-        public static int saberDmgPerFrame = 7;
+        public static int saberDmgPerFrame = 8;
         public static float saberOnTime = 11f;   // in client: saberTimeLeft
         public static float saberLength = 200f;
         public static float saberStart = 50f;
@@ -56,11 +58,11 @@ namespace Photon.MmoDemo.Server
         public static float laserLength = 1300f;
 
 
-        public static int laserDmgPerFrame = 1;
-        public static float laserOnTime = 2.1f;  // also in client for visuals: mlaserTimeLeft
+        public static int laserDmgPerFrame = 3;
+        public static float laserOnTime = 3f;  // also in client for visuals: mlaserTimeLeft
 
         public static float bombTime = 4.5f;  // time to explodey
-        public static float bombDmg = 25f;
+        public static float bombDmg = 125f;
         public static float bombSpeed = 130f;
         public static float bombRadius = 600f;
         public static float bombRadius2 = 360000f;
@@ -84,30 +86,36 @@ namespace Photon.MmoDemo.Server
         public static int runningBotCount = 0;
         public static int motherBotCount;
 
-        public static int MaxSwarmPerMother = 1;
+        public static int MaxSwarmPerMother = 30;
         public static int MaxMotherBots = 1;
         public static int OddsStrongBot = 10;   // chance out of 100 that swarm bot is a strong one
         public static int SecForMotherToRespawn = 22;
 
-        public static int SecMaxForSwarmSpawn = 12; // when swarm is almost full it takes this long for respawn
-        public static int SecMinForSwarmSpawn = 1;  // when swarm is nera empty it takes this long
-        public static float MaxDistFromMother = 2000;
-        public static float MaxDistFromMotherSq = 4000000;
-        public static float SpawnDistFromMother = 600f;
+        public static int SecMaxForSwarmSpawn = 8; // when swarm is almost full it takes this long for respawn
+        public static int SecMinForSwarmSpawn = 2;  // when swarm is nera empty it takes this long
+        public static float MaxDistFromMother = 200;
+        public static float MaxDistFromMotherSq = 40000;
+        public static float SpawnDistFromMother = 250f;
 
-        public static int SwarmMobHP = 3;
+        public static int SwarmMobHP = 30;  // also in BotBehaviour.cs
         public static int MotherHP = 600;
         public static int StrongMobHP = 12;
 
-        public static int SwarmSpeed = 160;
+        public static int SwarmSpeed = 30;
         public static int MotherSpeed = 70;
         public static int StrongMobSpeed = 170;
 
         public static float patrolRoamDistance = 200f;
 
-
+        public static float swarmShipRadius = 30f;
+        public static float swarmShipRadius2 = 900f;
+        public static float motherShipRadius = 120f;
+        public static float motherShipRadius2 = 14400f;
 
         ////////////////////////////////////////
+
+
+        public static bool TrueTenPercent = false;
 
     }
 }

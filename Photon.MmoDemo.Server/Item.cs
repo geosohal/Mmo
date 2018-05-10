@@ -230,11 +230,14 @@ namespace Photon.MmoDemo.Server
         /// Publishes a ItemPositionMessage in the PositionUpdateChannel
         /// Subscribes and unsubscribes regions if changed. 
         /// </summary>
-        public void UpdateInterestManagement()
+        public void UpdateInterestManagement(bool sendMessage)
         {
-            // inform attached interst area and radar
-            ItemPositionMessage message = this.GetPositionUpdateMessage(this.Position);
-            this.positionUpdateChannel.Publish(message);
+            if (sendMessage)
+            {
+                // inform attached interst area and radar
+                ItemPositionMessage message = this.GetPositionUpdateMessage(this.Position);
+                this.positionUpdateChannel.Publish(message);
+            }
 
             // update subscriptions if region changed
             Region prevRegion = this.CurrentWorldRegion;
@@ -242,6 +245,10 @@ namespace Photon.MmoDemo.Server
 
             if (newRegion != this.CurrentWorldRegion)
             {
+                if (this.CurrentWorldRegion != null)
+                {
+                    this.CurrentWorldRegion.myitems.Remove(this);
+                }
                 this.CurrentWorldRegion = newRegion;
 
                 if (this.regionSubscription != null)
@@ -276,13 +283,20 @@ namespace Photon.MmoDemo.Server
         public void UpdateRegionSimple()
         {
             Region newRegion = this.World.GetRegion(this.Position);
-            this.CurrentWorldRegion = newRegion;
-            newRegion.EnlistItem(this);     // add to regions item list
-            this.regionSubscription = new UnsubscriberCollection(
-                this.EventChannel.Subscribe(this.Fiber, (m) => newRegion.ItemEventChannel.Publish(m)), // route events through region to interest area
-                newRegion.RequestItemEnterChannel.Subscribe(this.Fiber, (m) => { m.InterestArea.OnItemEnter(this.GetItemSnapshot()); }), // region entered interest area fires message to let item notify interest area about enter
-                newRegion.RequestItemExitChannel.Subscribe(this.Fiber, (m) => { m.InterestArea.OnItemExit(this); }) // region exited interest area fires message to let item notify interest area about exit
-            );
+            if (newRegion != this.CurrentWorldRegion)
+            {
+                if (this.CurrentWorldRegion != null)
+                {
+                    this.CurrentWorldRegion.myitems.Remove(this);
+                }
+                this.CurrentWorldRegion = newRegion;
+                newRegion.EnlistItem(this);     // add to regions item list
+                this.regionSubscription = new UnsubscriberCollection(
+                    this.EventChannel.Subscribe(this.Fiber, (m) => newRegion.ItemEventChannel.Publish(m)), // route events through region to interest area
+                    newRegion.RequestItemEnterChannel.Subscribe(this.Fiber, (m) => { m.InterestArea.OnItemEnter(this.GetItemSnapshot()); }), // region entered interest area fires message to let item notify interest area about enter
+                    newRegion.RequestItemExitChannel.Subscribe(this.Fiber, (m) => { m.InterestArea.OnItemExit(this); }) // region exited interest area fires message to let item notify interest area about exit
+                );
+            }
         }
 
         
@@ -376,7 +390,7 @@ namespace Photon.MmoDemo.Server
         public void Move(Vector position)
         {
             this.SetPos(position);
-            this.UpdateInterestManagement();
+            this.UpdateInterestManagement(true);
         }
 
         /// <summary>
@@ -385,7 +399,7 @@ namespace Photon.MmoDemo.Server
         public void Spawn(Vector position)
         {
             this.SetPos(position);
-            this.UpdateInterestManagement();
+            this.UpdateInterestManagement(true);
         }
 
         //public void Spawn(Vector position, Vector rotation)

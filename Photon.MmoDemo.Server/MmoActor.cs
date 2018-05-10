@@ -57,7 +57,13 @@ namespace Photon.MmoDemo.Server
 
         public Item Avatar { get; set; }
 
-        protected int Hitpoints { get; set; }
+        protected int Hitpoints
+        {
+            get { return hitpoints; }
+            set { hitpoints = value; }
+        }
+
+        protected int hitpoints;
 
         public PeerBase Peer { get { return this.peer; } }
 
@@ -102,6 +108,11 @@ namespace Photon.MmoDemo.Server
         public bool TryGetItem(string itemid, out Item item)
         {
             return ownedItems.TryGetValue(itemid, out item);
+        }
+
+        public bool ContainsItem(string itemid)
+        {
+            return ownedItems.ContainsKey(itemid);
         }
 
         public void Dispose()

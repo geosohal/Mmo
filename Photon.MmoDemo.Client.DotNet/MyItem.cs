@@ -99,6 +99,18 @@ namespace Photon.MmoDemo.Client
             return true;
         }
 
+        public bool StartSuperFast()
+        {
+            Operations.StartSuperFast(this.Game, this.Id, this.Rotation, this.Game.Settings.SendReliable);
+            return true;
+        }
+
+        public bool EndSuperFast()
+        {
+            Operations.EndSuperFast(this.Game, this.Id,  this.Game.Settings.SendReliable);
+            return true;
+        }
+
         public bool FireLaser()
         {
             Operations.FireLaser(this.Game, this.Id, this.Game.Settings.SendReliable);

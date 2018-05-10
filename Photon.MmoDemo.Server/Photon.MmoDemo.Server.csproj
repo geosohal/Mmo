@@ -98,6 +98,7 @@
     </Compile>
     <Compile Include="Bullet.cs" />
     <Compile Include="GameSpecific\BotManager.cs" />
+    <Compile Include="GameSpecific\CollisionHelper.cs" />
     <Compile Include="GameSpecific\MathHelper.cs" />
     <Compile Include="GlobalVars.cs" />
     <Compile Include="GridWorld.cs" />

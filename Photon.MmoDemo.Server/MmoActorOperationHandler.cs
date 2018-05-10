@@ -35,8 +35,9 @@ namespace Photon.MmoDemo.Server
         System.Timers.Timer updateTimer;    // timer used to regularly trigger update operation
 
         bool isMegaThrusting;
+        bool isSuperFast;
         bool isBursting;
-        bool isSaberOut;
+        public bool isSaberOut;
         bool isLaserOn;
         bool isBombOut;
         float saberTimeLeft;
@@ -76,10 +77,11 @@ namespace Photon.MmoDemo.Server
             isBombOut = false;
             random = new Random();
             firstUpdate = true;
+            isSuperFast = false;
 
             // if this is the first peer connecting then bot manager isnt initialized
             if (BotManager.IsInitialized == false)
-                BotManager.InitializeManager(world);
+                BotManager.InitializeManager(world, GetDefaultSP());
         }
 
         private Vector GetRandomPosition()
@@ -106,11 +108,17 @@ namespace Photon.MmoDemo.Server
 
             UpdateMyProjectiles(msElapse);
             UpdateAvatarPos(msElapse);
-    //        botman.UpdateBots(msElapse, GetDefaultSP());
-          //  log.InfoFormat("asdasd: " + ts.Milliseconds.ToString());
+            GlobalVars.TrueTenPercent = ((new Random()).Next(39) < 2);
 
-           
-            watch = Stopwatch.StartNew();
+            if (GlobalVars.TrueTenPercent)
+            {
+              //  GlobalVars.log.InfoFormat("av Pos " + Avatar.Position.ToString());
+            }
+                //        botman.UpdateBots(msElapse, GetDefaultSP());
+                //  log.InfoFormat("asdasd: " + ts.Milliseconds.ToString());
+
+
+                watch = Stopwatch.StartNew();
         }
 
         private void AddHPBox(Vector pos)
@@ -135,17 +143,17 @@ namespace Photon.MmoDemo.Server
             }
             // if avatar is over the usualy max speed and isn't megatthrustic then it just came out
             // of a mega thrust and we need to ease it's spee bakc to normal
-            if (Avatar.Velocity.Len2 > GlobalVars.maxShipVelSq+10 && !isMegaThrusting)
+            if (Avatar.Velocity.Len2 > GlobalVars.maxShipVelSq+10 && !isMegaThrusting && !isSuperFast)
             {
                 if (Avatar.wasBursted)
                 {
                     //currMaxVel -= GlobalVars.burstFadePerSec * elapsedSeconds;
                     Avatar.Velocity = Avatar.Velocity * GlobalVars.burstDampening;
-                    log.InfoFormat("burst damp");
+                    //log.InfoFormat("burst damp");
                 }
                 else
                 {
-                    log.InfoFormat("reducing booster");
+                    //log.InfoFormat("reducing booster");
                     currMaxVel -= GlobalVars.megaFadePerSec * elapsedSeconds;
                     Avatar.Velocity = Vector.Normalized(Avatar.Velocity) * currMaxVel;
                 }
@@ -464,7 +472,7 @@ namespace Photon.MmoDemo.Server
 
         // through this function each actor/player checks for collisions with all bullets in regions 
         // that are in his interestareas. if a bullet if found to collide with his ship he sends out 
-        // a damage event to all clients so that they can update the hp for the shit with his itemid
+        // a damage event to all clients so that they can update the hp for the ship with his itemid
         /// </summary>
         /// <param name="peer"></param>
         /// <param name="request"></param>
@@ -481,14 +489,14 @@ namespace Photon.MmoDemo.Server
                     saberstartPt = Avatar.Position + Avatar.Rotation * GlobalVars.saberStart;
                 saberendPt = Avatar.Position + Avatar.Rotation * GlobalVars.saberLength;
 
-                Random r = new Random();
-                if (r.Next(50) < 5)
-                {
-                    log.InfoFormat("av pos " + Avatar.Position.ToString());
-                    log.InfoFormat("av rot " + Avatar.Rotation.ToString());
-                    log.InfoFormat("sab st " + saberstartPt.ToString());
-                    log.InfoFormat("av rot " + saberendPt.ToString());
-                }
+                //Random r = new Random();
+                //if (r.Next(50) < 5)
+                //{
+                //    log.InfoFormat("av pos " + Avatar.Position.ToString());
+                //    log.InfoFormat("av rot " + Avatar.Rotation.ToString());
+                //    log.InfoFormat("sab st " + saberstartPt.ToString());
+                //    log.InfoFormat("av rot " + saberendPt.ToString());
+                //}
 
                 saberTimeLeft -= elapsedSeconds;
                 if (saberTimeLeft < 0)
@@ -504,6 +512,8 @@ namespace Photon.MmoDemo.Server
                 if (laserTimeLeft < 0)
                     isLaserOn = false;
             }
+
+            SendParameters sp = GetDefaultSP();
             foreach (KeyValuePair<byte, InterestArea> iaEntry in interestAreas)
             {
                 foreach (Region reg in iaEntry.Value.regions)
@@ -511,48 +521,24 @@ namespace Photon.MmoDemo.Server
                     foreach (Item regionItem in reg.myitems)
                     {
                         Vector offset = new Vector();
-                        if ((byte)regionItem.Type == (byte)ItemType.Bullet && !ownedItems.ContainsKey(regionItem.Id))
+                        // if its a bullet and it's not my own bullet
+                        if (CollisionHelper.CheckItemCollisionAgainstProjectile(Avatar, regionItem, 
+                            ref this.hitpoints, sp, this, GlobalVars.playerShipRadius2, GlobalVars.playerShipRadius))
                         {
-                            //Vector bulletPos = regionItem.GetRewindedPos(Peer.RoundTripTime / 2);
-                            float distanceToBullet2 = (regionItem.Position - Avatar.Position).Len2;
-                            if (distanceToBullet2 < GlobalVars.playerShipRadius2)
-                            {
-                                log.InfoFormat("player + " + Avatar.Id.Substring(0, 3) + " collision with: " +
-                                    (ItemType)regionItem.Type);
-                                if (removeList == null)
-                                    removeList = new List<Tuple<Item, Region>>();
-                                removeList.Add(new Tuple<Item, Region>(regionItem, reg));   // set bullet to be removed
 
-
-
-                                SendParameters sp = GetDefaultSP();
-                                sp.Unreliable = false;
-
-                                var eventInstance = new HpEvent
-                                {
-                                    ItemId = Avatar.Id,
-                                    HpChange = GlobalVars.bulletDamage
-                                };
-                                var eventData = new EventData((byte)EventCode.HpEvent, eventInstance);
-                                var message = new ItemEventMessage(Avatar, eventData, sp);
-                                Avatar.EventChannel.Publish(message);
-
-                                this.Hitpoints -= GlobalVars.bulletDamage;
-                                if (this.Hitpoints < 0)
-                                {
-                                    // send itemdestroyed message for player's ship item
-                                }
-                            }
+                                //if (removeList == null)
+                                //    removeList = new List<Tuple<Item, Region>>();
+                                //removeList.Add(new Tuple<Item, Region>(regionItem, reg));   // set projectile to be removed
                         }
                         // if my light saber is out check for collision with other player ships
-                        else if ((byte)regionItem.Type == (byte)ItemType.Avatar && isSaberOut && regionItem != Avatar)
+                        else if (((byte)regionItem.Type == (byte)ItemType.Avatar || (byte)regionItem.Type == (byte)ItemType.Bot) && isSaberOut && regionItem != Avatar)
                         {
 
                             if (MathHelper.Intersects(saberstartPt, saberendPt, regionItem.Position, GlobalVars.playerShipRadius2,
                                  ref offset, GlobalVars.playerShipRadius, null, true))
                             {
-                                log.InfoFormat("saber collide with a shio");
-                                SendParameters sp = GetDefaultSP();
+                                log.InfoFormat("saber collide with " + regionItem.Id);
+   
 
                                 var eventInstance = new HpEvent
                                 {
@@ -565,67 +551,22 @@ namespace Photon.MmoDemo.Server
 
                                 regionItem.SetPos(regionItem.Position + offset * .9f); // move over instantly to uncollided position
                                 regionItem.Velocity = regionItem.Velocity + (offset / offset.Len) * Avatar.GetCumulativeDotProducts(8) * 20f;
-                            }
-                        }
-                        else if ((byte)regionItem.Type == (byte)ItemType.Bomb)
-                        {
-                            if (isSaberOut)
-                            {
-                                if (MathHelper.Intersects(saberstartPt, saberendPt, regionItem.Position, GlobalVars.playerShipRadius2,
-                                    ref offset, GlobalVars.playerShipRadius, null, true))
+
+                                if ((byte)regionItem.Type == (byte)ItemType.Bot)
                                 {
-                                    log.InfoFormat("saber collide with a bomb");
-                                    SendParameters sp = GetDefaultSP();
-
-                                    regionItem.SetPos(regionItem.Position + offset * 2.1f); // move over instantly to uncollided position
-
-                                    // set bomb velocity using 'collision impact' with saber
-                                    regionItem.Velocity = regionItem.Velocity + (offset / offset.Len) * Avatar.GetCumulativeDotProducts(8) * 90f;
-                                }
-                            }
-                            // if this is not my bomb, check if i collide with it
-                            if (!ownedItems.ContainsKey(regionItem.Id))
-                            {
-                                Vector difference = (regionItem.Position - Avatar.Position);
-                                float distanceToBomb2 = difference.Len2;
-                                if (distanceToBomb2 < (GlobalVars.playerShipRadius2 + GlobalVars.bombBallRadius2))
-                                {
-                                    log.InfoFormat("player + " + Avatar.Id.Substring(0, 3) + " collision with: " +
-                                        regionItem.Id.ToString());
-                                    if (removeList == null)
-                                        removeList = new List<Tuple<Item, Region>>();
-                                    removeList.Add(new Tuple<Item, Region>(regionItem, reg));   // set bomb to be removed
-
-                                    float t = (GlobalVars.bombRadius2 - distanceToBomb2) / GlobalVars.bombRadius2;
-                                    int damageToPlayer = (int)Math.Floor(t * GlobalVars.bombDmg);
-
-                                    SendParameters sp = GetDefaultSP();
-                                    sp.Unreliable = false;
-
-                                    var eventInstance = new HpEvent
-                                    {
-                                        ItemId = Avatar.Id,
-                                        HpChange = damageToPlayer,
-                                    };
-                                    var eventData = new EventData((byte)EventCode.HpEvent, eventInstance);
-                                    var message = new ItemEventMessage(Avatar, eventData, sp);
-                                    Avatar.EventChannel.Publish(message);
-
-                                    float force = GlobalVars.bombForce * t;
-                                    difference = difference / (float)Math.Sqrt(distanceToBomb2);
-                                    Avatar.Velocity = Avatar.Velocity + difference * force;
+                                    BotManager.mobTable[regionItem.Id].TakeDamage(GlobalVars.saberDmgPerFrame);
                                 }
                             }
                         }
+                       
                         // if my laser is on check for collision with other player ships
-                        else if ((byte)regionItem.Type == (byte)ItemType.Avatar && isLaserOn && regionItem != Avatar)
+                        else if (((byte)regionItem.Type == (byte)ItemType.Avatar || (byte)regionItem.Type == (byte)ItemType.Bot) 
+                            && isLaserOn && regionItem != Avatar)
                         {
                             if (MathHelper.Intersects(laserstartPt, laserendPt, regionItem.Position, GlobalVars.playerShipRadius2,
                                 ref offset, GlobalVars.playerShipRadius, null, false))
                             {
-                                log.InfoFormat("laser collide with a shio");
-                                SendParameters sp = GetDefaultSP();
-
+                                log.InfoFormat("laser collide with " + regionItem.Id);
                                 var eventInstance = new HpEvent
                                 {
                                     ItemId = regionItem.Id,
@@ -634,6 +575,10 @@ namespace Photon.MmoDemo.Server
                                 var eventData = new EventData((byte)EventCode.HpEvent, eventInstance);
                                 var message = new ItemEventMessage(regionItem, eventData, sp);
                                 regionItem.EventChannel.Publish(message);
+                                if ((byte)regionItem.Type == (byte)ItemType.Bot)
+                                {
+                                    BotManager.mobTable[regionItem.Id].TakeDamage(GlobalVars.laserDmgPerFrame);
+                                }
                             }
                         }
                         else if ((byte)regionItem.Type == (byte)ItemType.Resource)
@@ -647,7 +592,6 @@ namespace Photon.MmoDemo.Server
                                     removeList = new List<Tuple<Item, Region>>();
                                 removeList.Add(new Tuple<Item, Region>(regionItem, reg));   // set bullet to be removed
 
-                                SendParameters sp = GetDefaultSP();
                                 var eventInstance = new HpEvent
                                 {
                                     ItemId = Avatar.Id,
@@ -666,13 +610,19 @@ namespace Photon.MmoDemo.Server
                 return;
             foreach (Tuple<Item,Region> itemToRemove in removeList)
             {
-                log.InfoFormat("removing: " + itemToRemove.Item1.Id);
+                log.InfoFormat("removin: " + itemToRemove.Item1.Id);
+                if ((byte)itemToRemove.Item1.Type == (byte)ItemType.Bullet)
+                {
+                    // set projectile to dead and the owning player will remove it himself
+                    ((Bullet)itemToRemove.Item1).SetDead();
+                    continue;
+                }
                 itemToRemove.Item1.Destroy();
                 itemToRemove.Item1.Dispose();
                 this.RemoveItem(itemToRemove.Item1);
                 itemToRemove.Item2.myitems.Remove(itemToRemove.Item1);
-
                 itemToRemove.Item1.World.ItemCache.RemoveItem(itemToRemove.Item1.Id);
+
                 var eventInstance = new ItemDestroyed { ItemId = itemToRemove.Item1.Id };
                 var eventData = new EventData((byte)EventCode.ItemDestroyed, eventInstance);
                 this.Peer.SendEvent(eventData, new SendParameters { ChannelId = Settings.ItemEventChannel });
@@ -702,11 +652,11 @@ namespace Photon.MmoDemo.Server
                                 difference = difference / (float)Math.Sqrt(len2);
                                 
 
-                                if ( (byte)item.Type == (byte)ItemType.Avatar)
+                                if ( (byte)item.Type == (byte)ItemType.Avatar || (byte)item.Type == (byte)ItemType.Bot)
                                 {
                                     item.wasBursted = true;
                                     item.secSinceBursted = GlobalVars.timeForBurstToLast;
-                                    force = force * 2f;
+                                    force = force * 2f; // double force to account for dampening effect of ship
                                 }
 
                                 item.Velocity = item.Velocity + difference * force ;
@@ -734,17 +684,19 @@ namespace Photon.MmoDemo.Server
         {
             float elapsedSeconds = timeElapsed / 1000f;
             List<string> removeList =  null;
+
+            bool test = false;
             foreach (KeyValuePair<string, Item> item in ownedItems)
             {
                 if (item.Value.Type == (byte)ItemType.Bullet)
                 {
                     if (!((Bullet)item.Value).IsAlive())// bullet epxired
                     {
-                        log.InfoFormat("bllet died " + item.Value.Id);
+                    //    log.InfoFormat("bllet died " + item.Value.Id);
 
                         if (removeList == null)
                             removeList = new List<string>();
-                        removeList.Add(item.Key);   // set bullet to be removed
+                        removeList.Add(item.Value.Id);   // set bullet to be removed
                         continue;   // skip bullet since its expired
 
                     }
@@ -762,7 +714,9 @@ namespace Photon.MmoDemo.Server
                         // save previous for event
                         Vector oldPosition = item.Value.Position;
                         // move
+                        //item.Value.Move(newPos);
                         item.Value.SetPos(newPos);
+                        item.Value.UpdateRegionSimple();
 
                         // send event
                         var eventInstance = new ItemMoved
@@ -784,6 +738,7 @@ namespace Photon.MmoDemo.Server
                     // so clients fire particles, alter nearby people's velocities
                     if (!((Bomb)item.Value).IsAlive())
                     {
+                        test = true;
                         log.InfoFormat("bomb expldoed");
                         // set bomb to be removed
                         if (removeList == null)
@@ -797,55 +752,53 @@ namespace Photon.MmoDemo.Server
                             {
                                 foreach (Item regionItem in reg.myitems)
                                 {
-                                    if ((byte)regionItem.Type == (byte)ItemType.Avatar)
+                                    if ((byte)regionItem.Type == (byte)ItemType.Avatar ||
+                                        (byte)regionItem.Type == (byte)ItemType.Bot)
                                     {
                                         // distance from bomb to player
                                         Vector difference = regionItem.Position - item.Value.Position;
                                         float distanceToBomb2 = difference.Len2;
                                         if (distanceToBomb2 < GlobalVars.bombRadius2)
                                         {
-                                            log.InfoFormat("bomb collision with " + regionItem.Id.ToString());
+                                            log.InfoFormat("bomb explosion collision with " + regionItem.Id.ToString());
                                             SendParameters sp = GetDefaultSP();
-                                            sp.Unreliable = false;
+                                          //  sp.Unreliable = false;
 
                                             float t = (GlobalVars.bombRadius2 - distanceToBomb2) / GlobalVars.bombRadius2;
-                                            int damageToPlayer = (int)Math.Floor(t * GlobalVars.bombDmg);
+                                            int damageToShip = (int)Math.Floor(t * GlobalVars.bombDmg);
                                             var eventInstance = new HpEvent
                                             {
-                                                ItemId = Avatar.Id,
-                                                HpChange = damageToPlayer
+                                                ItemId = regionItem.Id,
+                                                HpChange = damageToShip
                                             };
                                             var eventData = new EventData((byte)EventCode.HpEvent, eventInstance);
-                                            var message = new ItemEventMessage(Avatar, eventData, sp);
-                                            Avatar.EventChannel.Publish(message);
-
+                                            var message = new ItemEventMessage(regionItem, eventData, sp);
+                                            regionItem.EventChannel.Publish(message);
                                             float force = GlobalVars.bombForce * t;
                                             difference = difference / (float)Math.Sqrt(distanceToBomb2);
                                             regionItem.Velocity = regionItem.Velocity + difference * force;
 
-                                            //var eventInstance2 = new BombExplosion
-                                            //{
-                                            //    ItemId = 
-                                            //}
+                                            
+                                            if ((byte)regionItem.Type == (byte)ItemType.Bot)
+                                            {
+                                                bool haskey = BotManager.mobTable.ContainsKey(regionItem.Id);
+                                                BotManager.mobTable[regionItem.Id].TakeDamage(damageToShip);
+                                            }
                                         }
                                     }
                                 }
                             }
+
                         }
                     } //end of if bomb exploded
-
-                    ((Bomb)item.Value).DecreaseLife(elapsedSeconds);
-
-                    if (item.Value.Velocity.Len2 > GlobalVars.maxBombVel2)
-                        item.Value.Velocity = item.Value.Velocity * GlobalVars.bombDamp;
-                    Vector newPos = item.Value.Position + item.Value.Velocity * elapsedSeconds;
-
-                    //if ((new Random()).Next(10) < 2)
-                    //{
-                    //    log.InfoFormat("bomb newpos: " + newPos.ToString());
-                    //}
-                    // publish move event for bullet ItemMoved
+                    else
                     {
+                        ((Bomb)item.Value).DecreaseLife(elapsedSeconds);
+
+                        if (item.Value.Velocity.Len2 > GlobalVars.maxBombVel2)
+                            item.Value.Velocity = item.Value.Velocity * GlobalVars.bombDamp;
+                        Vector newPos = item.Value.Position + item.Value.Velocity * elapsedSeconds;
+
                         SendParameters sp = GetDefaultSP();
 
                         // save previous for event
@@ -870,19 +823,21 @@ namespace Photon.MmoDemo.Server
             }   // foreach item
 
             if (removeList == null)
+            {
                 return;
+            }
             foreach (string str in removeList)
             {
+                log.InfoFormat("removing projectil " + str);
                 Item itemToRemove = ownedItems[str];
+                itemToRemove.CurrentWorldRegion.myitems.Remove(itemToRemove);
                 itemToRemove.Destroy();
                 itemToRemove.Dispose();
                 bool removed = this.RemoveItem(itemToRemove);
-                log.InfoFormat("bullet/omb removed: " + removed.ToString());
-
                 ownedItems[str].World.ItemCache.RemoveItem(itemToRemove.Id);
-                var eventInstance = new ItemDestroyed { ItemId = itemToRemove.Id };
-                var eventData = new EventData((byte)EventCode.ItemDestroyed, eventInstance);
-                this.Peer.SendEvent(eventData, new SendParameters { ChannelId = Settings.ItemEventChannel });
+                //var eventInstance = new ItemDestroyed { ItemId = itemToRemove.Id };
+                //var eventData = new EventData((byte)EventCode.ItemDestroyed, eventInstance);
+                //this.Peer.SendEvent(eventData, new SendParameters { ChannelId = Settings.ItemEventChannel });
             }
         }
 
@@ -941,9 +896,10 @@ namespace Photon.MmoDemo.Server
         }
 
 
+
+
         private OperationResponse OperationFireSaberHelper(Item item, FireSaber operation, SendParameters sendParameters, int roundTripTime)
         {
-            log.InfoFormat("firingsaber");
             isSaberOut = true;
             saberTimeLeft = GlobalVars.saberOnTime;
 
@@ -966,6 +922,104 @@ namespace Photon.MmoDemo.Server
                 return null;
             }
 
+            return operation.GetOperationResponse(result);
+        }
+        public OperationResponse OperationEndSuperFast(PeerBase peer, OperationRequest request, SendParameters sendParameters)
+        {
+            var operation = new EndSuperFast(peer.Protocol, request);
+            if (!operation.IsValid)
+                return new OperationResponse(request.OperationCode) { ReturnCode = (int)ReturnCode.InvalidOperationParameter, DebugMessage = operation.GetErrorMessage() };
+
+            operation.OnStart();
+
+            Item item;
+            if (string.IsNullOrEmpty(operation.ItemId))
+            {
+                item = this.Avatar;
+                // set return values
+                operation.ItemId = item.Id;
+            }
+            else if (this.TryGetItem(operation.ItemId, out item) == false)
+                return operation.GetOperationResponse((int)ReturnCode.ItemNotFound, "playerWithIdNotFound1");
+
+
+            return this.OperationEndSuperFastHelper((Item)item, operation, sendParameters);
+        }
+
+        private OperationResponse OperationEndSuperFastHelper(Item item, EndSuperFast operation, SendParameters sendParameters)
+        {
+            log.InfoFormat("end superfast");
+            isSuperFast = false;
+            
+
+            // should always be OK
+            MethodReturnValue result = this.CheckAccess(item);
+            if (result.IsOk)
+            {
+                // send event
+                var eventInstance = new StartSuperFastEvent
+                {
+                    ItemId = item.Id,
+                };
+
+                var eventData = new EventData((byte)EventCode.EndSuperFast, eventInstance);
+                sendParameters.ChannelId = Settings.ItemEventChannel;
+                var message = new ItemEventMessage(item, eventData, sendParameters);
+                item.EventChannel.Publish(message); // anyone in the players event channel will need to spawn the bullet
+                                                    // no response sent
+                operation.OnComplete();
+                return null;
+            }
+            return operation.GetOperationResponse(result);
+        }
+
+        public OperationResponse OperationStartSuperFast(PeerBase peer, OperationRequest request, SendParameters sendParameters)
+        {
+            var operation = new StartSuperFast(peer.Protocol, request);
+            if (!operation.IsValid)
+                return new OperationResponse(request.OperationCode) { ReturnCode = (int)ReturnCode.InvalidOperationParameter, DebugMessage = operation.GetErrorMessage() };
+
+            operation.OnStart();
+
+            Item item;
+            if (string.IsNullOrEmpty(operation.ItemId))
+            {
+                item = this.Avatar;
+                // set return values
+                operation.ItemId = item.Id;
+            }
+            else if (this.TryGetItem(operation.ItemId, out item) == false)
+                return operation.GetOperationResponse((int)ReturnCode.ItemNotFound, "playerWithIdNotFound1");
+
+
+            return this.OperationStSuperFastHelper((Item)item, operation, sendParameters);
+        }
+
+        private OperationResponse OperationStSuperFastHelper(Item item, StartSuperFast operation, SendParameters sendParameters)
+        {
+            log.InfoFormat("st superfast");
+            isSuperFast = true;
+            Avatar.Rotation = operation.Rotation;
+            Avatar.Velocity = Avatar.Rotation * GlobalVars.SuperFastVel;
+
+            // should always be OK
+            MethodReturnValue result = this.CheckAccess(item);
+            if (result.IsOk)
+            {
+                // send event
+                var eventInstance = new StartSuperFastEvent
+                {
+                    ItemId = item.Id,
+                };
+
+                var eventData = new EventData((byte)EventCode.StartSuperFast, eventInstance);
+                sendParameters.ChannelId = Settings.ItemEventChannel;
+                var message = new ItemEventMessage(item, eventData, sendParameters);
+                item.EventChannel.Publish(message); // anyone in the players event channel will need to spawn the bullet
+                                                    // no response sent
+                operation.OnComplete();
+                return null;
+            }
             return operation.GetOperationResponse(result);
         }
 
@@ -1015,15 +1069,15 @@ namespace Photon.MmoDemo.Server
 
                     float oneWayTripTime = ((float)roundTripTime / 1000f) / 2;
                     float watchElapsed = (float)watch.Elapsed.Milliseconds;
-                    log.InfoFormat("oneway tr time: {0} watch: {1}", oneWayTripTime.ToString(), watchElapsed.ToString());
+                  //  log.InfoFormat("oneway tr time: {0} watch: {1}", oneWayTripTime.ToString(), watchElapsed.ToString());
                     // update bullet's position using it's velocity and the time elapsed (time for packet to get to server)
                     Vector newPos = Avatar.Position + Avatar.Velocity * watchElapsed / 1000f;
-                    log.InfoFormat("avpos:" + Avatar.Position.ToString());
-                    log.InfoFormat("newpos for bult:" + newPos.ToString());
+                 //   log.InfoFormat("avpos:" + Avatar.Position.ToString());
+                //    log.InfoFormat("newpos for bult:" + newPos.ToString());
                     // + operation.Rotation * oneWayTripTime * GlobalVars.bulletSpeed;
 
                     Vector bombVelocity = Avatar.Velocity + operation.Rotation * GlobalVars.bombSpeed;
-                    log.InfoFormat("bvel " + bombVelocity.ToString());
+                //    log.InfoFormat("bvel " + bombVelocity.ToString());
                     newBomb = new Bomb(newPos, new Vector(0,0), null, this,
                         "zz" + (GlobalVars.bulletCount++ % 99).ToString(), (byte)ItemType.Bomb, world);
                     newBomb.secsFromLastUpdateDone = watchElapsed;
@@ -1394,7 +1448,8 @@ namespace Photon.MmoDemo.Server
         public OperationResponse OnOperationRequest(PeerBase peer, OperationRequest operationRequest, SendParameters sendParameters)
         {
             if ((OperationCode)operationRequest.OperationCode != OperationCode.Move
-                && (OperationCode)operationRequest.OperationCode != OperationCode.VelocityRotation)
+                && (OperationCode)operationRequest.OperationCode != OperationCode.VelocityRotation
+                && (OperationCode)operationRequest.OperationCode != OperationCode.Breaks)
             {
                 log.InfoFormat(Avatar.Id.Substring(0,3) + " op req code: {0}, rel: {1}" , 
                     ((OperationCode)operationRequest.OperationCode).ToString(), 
@@ -1467,7 +1522,7 @@ namespace Photon.MmoDemo.Server
                 case OperationCode.VelocityRotation:
                     return OperationVelocityRot(peer, operationRequest, sendParameters);
                 case OperationCode.Breaks:
-                    log.InfoFormat("applying breaks");
+                 //   log.InfoFormat("applying breaks");
                     Avatar.Velocity = Avatar.Velocity * GlobalVars.breaksDampFactor;
                     return new OperationResponse(operationRequest.OperationCode);
                 case OperationCode.Burst:
@@ -1481,6 +1536,11 @@ namespace Photon.MmoDemo.Server
                 case OperationCode.ShootBomb:
 
                     return this.OperationShootBomb(peer, operationRequest, sendParameters);
+                case OperationCode.StartSuperFast:
+                    return this.OperationStartSuperFast(peer, operationRequest, sendParameters);
+                case OperationCode.EndSuperFast:
+                    return this.OperationEndSuperFast(peer, operationRequest, sendParameters);
+
 
             }
 
@@ -1669,15 +1729,15 @@ namespace Photon.MmoDemo.Server
 
                     float oneWayTripTime = ((float)roundTripTime / 1000f) / 2;
                     float watchElapsed = (float)watch.Elapsed.Milliseconds;
-                    log.InfoFormat("oneway tr time: {0} watch: {1}", oneWayTripTime.ToString(), watchElapsed.ToString());
+               //     log.InfoFormat("blt trip time: {0} watch: {1}", oneWayTripTime.ToString(), watchElapsed.ToString());
                     // update bullet's position using it's velocity and the time elapsed (time for packet to get to server)
                     Vector newPos = Avatar.Position + Avatar.Velocity * watchElapsed / 1000f;
-                    log.InfoFormat("avpos:" + Avatar.Position.ToString());
-                    log.InfoFormat("newpos for bult:" + newPos.ToString());
+              //      log.InfoFormat("avpos:" + Avatar.Position.ToString());
+              //      log.InfoFormat("newpos for bult:" + newPos.ToString());
                     // + operation.Rotation * oneWayTripTime * GlobalVars.bulletSpeed;
 
                     Vector bulletVelocity = Avatar.Velocity + operation.Rotation * GlobalVars.bulletSpeed;
-                    log.InfoFormat("bvel " + bulletVelocity.ToString());
+               //     log.InfoFormat("bvel " + bulletVelocity.ToString());
                     newBullet = new Bullet(newPos, bulletVelocity, null, this, 
                         "bt" + (GlobalVars.bulletCount++%99).ToString(), (byte)ItemType.Bullet, world);
                     newBullet.secsFromLastUpdateDone = watchElapsed;
@@ -1691,7 +1751,7 @@ namespace Photon.MmoDemo.Server
                 newBullet.UpdateRegionSimple();
                 
               //  a different way to spawn item by specifics, (found out it had problems moving the item though)
-                 log.InfoFormat("adding bullet {0}, pos: {1}, ROT: {2}", newBullet.Id, operation.Position.ToString(), operation.Rotation.ToString());
+             //    log.InfoFormat("adding bullet {0}, pos: {1}, ROT: {2}", newBullet.Id, operation.Position.ToString(), operation.Rotation.ToString());
                 // send event
                 var eventInstance = new BulletFired
                 {
@@ -1826,14 +1886,20 @@ namespace Photon.MmoDemo.Server
                 {
                   //  log.InfoFormat("mEGA thursting");
                     isMegaThrusting = true;
+                    isSuperFast = false;
                 }
                 else
                     isMegaThrusting = false;
 
-                if (!isMegaThrusting)
+                if (!isMegaThrusting && !isSuperFast)
                 {
                     if (item.Velocity.Len2 > GlobalVars.maxShipVelSq)
                         item.Velocity = Vector.Normalized(item.Velocity) * GlobalVars.maxShipVel;
+                }
+                else if (isSuperFast)
+                {
+                    currMaxVel = GlobalVars.SuperFastVel * 3;
+                    item.Velocity = item.Rotation * GlobalVars.megaMaxVel;
                 }
                 else
                 {
