@@ -55,13 +55,20 @@ namespace Photon.MmoDemo.Server
 
         Random random;
         bool firstUpdate;
+        bool wasdMode;
 
+        bool isBotMan;
 
+        Vector mouseFwd;
         
 
-        public MmoActorOperationHandler(PeerBase peer, World world, InterestArea interestArea)
+        public MmoActorOperationHandler(PeerBase peer, World world, InterestArea interestArea, bool isBotMan)
             : base(peer, world)
         {
+            random = new Random();
+
+            this.isBotMan = isBotMan;
+
             this.AddInterestArea(interestArea);
             updateTimer = new System.Timers.Timer();
             updateTimer.Elapsed += new System.Timers.ElapsedEventHandler(OnTimersUpdateEvent);
@@ -75,10 +82,12 @@ namespace Photon.MmoDemo.Server
             isBursting = false;
             isSaberOut = false;
             isBombOut = false;
-            random = new Random();
+            
             firstUpdate = true;
             isSuperFast = false;
-
+            mouseFwd = new Vector(1, 0);
+            wasdMode = true;
+            log.InfoFormat("initializing actor op handler ********************");
             // if this is the first peer connecting then bot manager isnt initialized
             if (BotManager.IsInitialized == false)
                 BotManager.InitializeManager(world, GetDefaultSP());
@@ -93,32 +102,27 @@ namespace Photon.MmoDemo.Server
         // Specify what you want to happen when the Elapsed event is raised.
         private void OnTimersUpdateEvent(object source, System.Timers.ElapsedEventArgs e)
         {
-            if (firstUpdate)
+            if (firstUpdate && !isBotMan)
             {
                 // spawn random hp boxes
                 for (int i =0; i < 15; i++)
                     AddHPBox(GetRandomPosition());
-                log.InfoFormat("added hps");
+                log.InfoFormat("added hp boxes");
                 firstUpdate = false;
             }
             watch.Stop();   // sets elapsed time to time since watch.Start() was called
             TimeSpan ts = watch.Elapsed;
             float msElapse = (float)ts.Milliseconds;
-            CheckForCollisions(msElapse);
 
             UpdateMyProjectiles(msElapse);
-            UpdateAvatarPos(msElapse);
-            GlobalVars.TrueTenPercent = ((new Random()).Next(39) < 2);
 
-            if (GlobalVars.TrueTenPercent)
+            if (!isBotMan)
             {
-              //  GlobalVars.log.InfoFormat("av Pos " + Avatar.Position.ToString());
+                CheckForCollisions(msElapse);
+                UpdateAvatarPos(msElapse);
             }
-                //        botman.UpdateBots(msElapse, GetDefaultSP());
-                //  log.InfoFormat("asdasd: " + ts.Milliseconds.ToString());
 
-
-                watch = Stopwatch.StartNew();
+            watch = Stopwatch.StartNew();
         }
 
         private void AddHPBox(Vector pos)
@@ -473,6 +477,7 @@ namespace Photon.MmoDemo.Server
         // through this function each actor/player checks for collisions with all bullets in regions 
         // that are in his interestareas. if a bullet if found to collide with his ship he sends out 
         // a damage event to all clients so that they can update the hp for the ship with his itemid
+        // other collisions such as laser, saber, bot, and resource are done here as well
         /// </summary>
         /// <param name="peer"></param>
         /// <param name="request"></param>
@@ -485,9 +490,16 @@ namespace Photon.MmoDemo.Server
             Vector saberendPt = new Vector();
             if (isSaberOut)
             {
-               
+                if (!wasdMode)
+                {
                     saberstartPt = Avatar.Position + Avatar.Rotation * GlobalVars.saberStart;
-                saberendPt = Avatar.Position + Avatar.Rotation * GlobalVars.saberLength;
+                    saberendPt = Avatar.Position + Avatar.Rotation * GlobalVars.saberLength;
+                }
+                else
+                {
+                    saberstartPt = Avatar.Position + mouseFwd * GlobalVars.saberStart;
+                    saberendPt = Avatar.Position + mouseFwd * GlobalVars.saberLength;
+                }
 
                 //Random r = new Random();
                 //if (r.Next(50) < 5)
@@ -506,8 +518,16 @@ namespace Photon.MmoDemo.Server
             Vector laserendPt = new Vector();
             if (isLaserOn)
             {
-                laserstartPt = Avatar.Position + Avatar.Rotation * GlobalVars.laserStart;
-                laserendPt = laserstartPt + Avatar.Rotation * GlobalVars.laserLength;
+                if (!wasdMode)
+                {
+                    laserstartPt = Avatar.Position + Avatar.Rotation * GlobalVars.laserStart;
+                    laserendPt = laserstartPt + Avatar.Rotation * GlobalVars.laserLength;
+                }
+                else
+                {
+                    laserstartPt = Avatar.Position + mouseFwd* GlobalVars.laserStart;
+                    laserendPt = laserstartPt + mouseFwd * GlobalVars.laserLength;
+                }
                 laserTimeLeft -= elapsedSeconds;
                 if (laserTimeLeft < 0)
                     isLaserOn = false;
@@ -520,6 +540,8 @@ namespace Photon.MmoDemo.Server
                 {
                     foreach (Item regionItem in reg.myitems)
                     {
+ 
+
                         Vector offset = new Vector();
                         // if its a bullet and it's not my own bullet
                         if (CollisionHelper.CheckItemCollisionAgainstProjectile(Avatar, regionItem, 
@@ -549,8 +571,8 @@ namespace Photon.MmoDemo.Server
                                 var message = new ItemEventMessage(regionItem, eventData, sp);
                                 regionItem.EventChannel.Publish(message);
 
-                                regionItem.SetPos(regionItem.Position + offset * .9f); // move over instantly to uncollided position
-                                regionItem.Velocity = regionItem.Velocity + (offset / offset.Len) * Avatar.GetCumulativeDotProducts(8) * 20f;
+                               // regionItem.SetPos(regionItem.Position + offset * .9f); // move over instantly to uncollided position
+                               // regionItem.Velocity = regionItem.Velocity + (offset / offset.Len) * Avatar.GetCumulativeDotProducts(8) * 20f;
 
                                 if ((byte)regionItem.Type == (byte)ItemType.Bot)
                                 {
@@ -579,6 +601,16 @@ namespace Photon.MmoDemo.Server
                                 {
                                     BotManager.mobTable[regionItem.Id].TakeDamage(GlobalVars.laserDmgPerFrame);
                                 }
+                            }
+                        }
+                        // if it's a bot and laser or saber isn't on, then pass a reference of your own item to the bot
+                        // so he can change to chase state and follow you
+                        else if ((byte)regionItem.Type == (byte)ItemType.Bot)
+                        {
+                            float distanceToBot2 = (regionItem.Position - Avatar.Position).Len2;
+                            if (distanceToBot2 < GlobalVars.BotSight2)
+                            {
+                                BotManager.ChangeMobToChaseState(regionItem.Id, (MmoActor)this);
                             }
                         }
                         else if ((byte)regionItem.Type == (byte)ItemType.Resource)
@@ -848,6 +880,7 @@ namespace Photon.MmoDemo.Server
            // operation.Rotation = Avatar.Rotation;
             if (!operation.IsValid)
             {
+                log.InfoFormat("invalid fire bullet op");
                 return new OperationResponse(request.OperationCode) { ReturnCode = (int)ReturnCode.InvalidOperationParameter, DebugMessage = operation.GetErrorMessage() };
             }
             operation.OnStart();
@@ -862,6 +895,7 @@ namespace Photon.MmoDemo.Server
             }
             else if (this.TryGetItem(operation.ItemId, out item) == false)
             {
+                log.InfoFormat("cant find item with id: " + operation.ItemId);
                 return operation.GetOperationResponse((int)ReturnCode.ItemNotFound, "playerWithIdNotFound1");
             }
 
@@ -892,6 +926,10 @@ namespace Photon.MmoDemo.Server
                 return operation.GetOperationResponse((int)ReturnCode.ItemNotFound, "playerWithIdNotFound1");
             }
 
+            if (!operation.Rotation.IsZero)
+            {
+                mouseFwd = operation.Rotation;
+            }
             return this.OperationFireSaberHelper((Item)item, operation, sendParameters, peer.RoundTripTime);
         }
 
@@ -1131,6 +1169,11 @@ namespace Photon.MmoDemo.Server
             else if (this.TryGetItem(operation.ItemId, out item) == false)
             {
                 return operation.GetOperationResponse((int)ReturnCode.ItemNotFound, "playerWithIdNotFound");
+            }
+
+            if (!operation.Rotation.IsZero)
+            {
+                mouseFwd = operation.Rotation;
             }
 
             return this.OperationFireLaserHelper((Item)item, operation, sendParameters);
@@ -1542,6 +1585,7 @@ namespace Photon.MmoDemo.Server
                     return this.OperationEndSuperFast(peer, operationRequest, sendParameters);
 
 
+
             }
 
             return new OperationResponse(operationRequest.OperationCode)
@@ -1731,12 +1775,12 @@ namespace Photon.MmoDemo.Server
                     float watchElapsed = (float)watch.Elapsed.Milliseconds;
                //     log.InfoFormat("blt trip time: {0} watch: {1}", oneWayTripTime.ToString(), watchElapsed.ToString());
                     // update bullet's position using it's velocity and the time elapsed (time for packet to get to server)
-                    Vector newPos = Avatar.Position + Avatar.Velocity * watchElapsed / 1000f;
+                    Vector newPos = item.Position + item.Velocity * watchElapsed / 1000f;
               //      log.InfoFormat("avpos:" + Avatar.Position.ToString());
               //      log.InfoFormat("newpos for bult:" + newPos.ToString());
                     // + operation.Rotation * oneWayTripTime * GlobalVars.bulletSpeed;
 
-                    Vector bulletVelocity = Avatar.Velocity + operation.Rotation * GlobalVars.bulletSpeed;
+                    Vector bulletVelocity = item.Velocity + operation.Rotation * GlobalVars.bulletSpeed;
                //     log.InfoFormat("bvel " + bulletVelocity.ToString());
                     newBullet = new Bullet(newPos, bulletVelocity, null, this, 
                         "bt" + (GlobalVars.bulletCount++%99).ToString(), (byte)ItemType.Bullet, world);
@@ -1810,6 +1854,7 @@ namespace Photon.MmoDemo.Server
                     Rotation = item.Rotation,
                 };
 
+
                 var eventData = new EventData((byte)EventCode.FireLaser, eventInstance);
                 sendParameters.ChannelId = Settings.ItemEventChannel;
                 var message = new ItemEventMessage(item, eventData, sendParameters);
@@ -1879,6 +1924,10 @@ namespace Photon.MmoDemo.Server
                     item.Velocity += operation.Velocity;
                   //  item.IsThrusting = true;
                 }
+                if (operation.MouseFwd.IsZero == false)
+                {
+                    mouseFwd = operation.MouseFwd;
+                }
               //  else
                  //   item.IsThrusting = false;
 
@@ -1899,7 +1948,10 @@ namespace Photon.MmoDemo.Server
                 else if (isSuperFast)
                 {
                     currMaxVel = GlobalVars.SuperFastVel * 3;
-                    item.Velocity = item.Rotation * GlobalVars.megaMaxVel;
+                    if (!wasdMode)
+                        item.Velocity = item.Rotation * GlobalVars.megaMaxVel;
+                    else
+                        item.Velocity = mouseFwd * GlobalVars.megaMaxVel;
                 }
                 else
                 {

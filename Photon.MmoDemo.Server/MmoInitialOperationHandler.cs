@@ -123,6 +123,8 @@ namespace Photon.MmoDemo.Server
         /// The MmoActor becomes the new Peer.CurrentOperationHandler.
         /// If another MmoActor with the same name exists he is disconnected.
         /// An OperationResponse with error code ReturnCode.Ok is published on success.
+        /// 
+        /// if this is bot manager entering world then we dont spawn an avatar
         /// </remarks>
         public OperationResponse OperationEnterWorld(PeerBase peer, OperationRequest request, SendParameters sendParameters, bool isBotMan)
         {
@@ -144,7 +146,7 @@ namespace Photon.MmoDemo.Server
                     ViewDistanceExit = operation.ViewDistanceExit
                 };
 
-            var actor = new MmoActorOperationHandler(peer, world, interestArea);
+            var actor = new MmoActorOperationHandler(peer, world, interestArea, isBotMan);
             log.InfoFormat("entering world: " + operation.Username);
             var avatar = new Item(operation.Position, operation.Rotation, operation.Properties, actor, operation.Username, (byte)ItemType.Avatar, world);
 

@@ -29,6 +29,9 @@ namespace Photon.MmoDemo.Server.Operations
         [DataMember(Code = (byte)ParameterCode.Rotation, IsOptional = true)]
         public Vector Rotation { get; set; }
 
+        [DataMember(Code = (byte)ParameterCode.MouseFwd, IsOptional = true)]
+        public Vector MouseFwd { get; set; }
+
         [DataMember(Code = (byte)ParameterCode.IsMegaThrust, IsOptional = true)]
         public bool IsMegaThrust { get; set; }
 

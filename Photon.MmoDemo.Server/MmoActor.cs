@@ -57,7 +57,7 @@ namespace Photon.MmoDemo.Server
 
         public Item Avatar { get; set; }
 
-        protected int Hitpoints
+        public int Hitpoints
         {
             get { return hitpoints; }
             set { hitpoints = value; }
@@ -84,6 +84,7 @@ namespace Photon.MmoDemo.Server
                 log.InfoFormat(Avatar.Id.Substring(0, 2) + ": adding item to mmoactor");
             if (item.Owner != this)
             {
+                log.InfoFormat("foreign owner");
                 throw new ArgumentException("foreign owner forbidden");
             }
 

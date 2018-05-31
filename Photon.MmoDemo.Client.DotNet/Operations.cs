@@ -129,7 +129,7 @@ namespace Photon.MmoDemo.Client
             game.SendOperation(OperationCode.Move, data, sendReliable, Settings.ItemChannel);
         }
 
-        public static void VelocityRot(Game game, string itemId, Vector vel, Vector? rot, bool isMegaThrust, bool sendReliable)
+        public static void VelocityRot(Game game, string itemId, Vector vel, Vector? rot, Vector? mouseFwd, bool isMegaThrust, bool sendReliable)
         {
             var data = new Dictionary<byte, object> { { (byte)ParameterCode.Velocity, vel } };
             if (itemId != null)
@@ -137,6 +137,8 @@ namespace Photon.MmoDemo.Client
 
             if (rot != null)
                 data.Add((byte)ParameterCode.Rotation, rot);
+            if (mouseFwd != null)
+                data.Add((byte)ParameterCode.MouseFwd, mouseFwd);
             if (isMegaThrust == true)
                 data.Add((byte)ParameterCode.IsMegaThrust, true);
 

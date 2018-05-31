@@ -35,13 +35,14 @@ namespace Photon.MmoDemo.Server
         /// </summary>
         public IDisposable RadarSubscription { get; set; }
 
+       
         public MmoPeer(InitRequest initRequest)
             : base(initRequest)
         {
             this.initialOpHandler = new MmoInitialOperationHandler(this);
             // this is the operation handler before entering a world
             this.SetInitialOperationhandler();
-           
+          
         }
 
         internal void SetInitialOperationhandler()

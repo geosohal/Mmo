@@ -50,7 +50,7 @@ namespace Photon.MmoDemo.Server
         public static float burstRadiusSq = 810000f;
         public static float burstForce = 4000f;
 
-        public static int saberDmgPerFrame = 8;
+        public static int saberDmgPerFrame = 9;
         public static float saberOnTime = 11f;   // in client: saberTimeLeft
         public static float saberLength = 200f;
         public static float saberStart = 50f;
@@ -59,7 +59,7 @@ namespace Photon.MmoDemo.Server
 
 
         public static int laserDmgPerFrame = 3;
-        public static float laserOnTime = 3f;  // also in client for visuals: mlaserTimeLeft
+        public static float laserOnTime = 3.5f;  // also in client for visuals: mlaserTimeLeft
 
         public static float bombTime = 4.5f;  // time to explodey
         public static float bombDmg = 125f;
@@ -93,24 +93,42 @@ namespace Photon.MmoDemo.Server
 
         public static int SecMaxForSwarmSpawn = 8; // when swarm is almost full it takes this long for respawn
         public static int SecMinForSwarmSpawn = 2;  // when swarm is nera empty it takes this long
-        public static float MaxDistFromMother = 200;
-        public static float MaxDistFromMotherSq = 40000;
+        public static float MaxDistFromMother = 800;
+        public static float MaxDistFromMotherSq = 640000;
         public static float SpawnDistFromMother = 250f;
 
+        public static int FastSwarmMobHP = 11;
         public static int SwarmMobHP = 30;  // also in BotBehaviour.cs
         public static int MotherHP = 600;
         public static int StrongMobHP = 12;
 
-        public static int SwarmSpeed = 30;
-        public static int MotherSpeed = 70;
-        public static int StrongMobSpeed = 170;
+        public static int FastSwarmSpeed = 160;
+        public static int SwarmSpeed = 85;
+        public static int MotherSpeed = 20;
+        public static int StrongMobSpeed = 40;
 
-        public static float patrolRoamDistance = 200f;
+        public static float patrolRoamDistance = 400f;
 
         public static float swarmShipRadius = 30f;
         public static float swarmShipRadius2 = 900f;
-        public static float motherShipRadius = 120f;
-        public static float motherShipRadius2 = 14400f;
+        public static float motherShipRadius = 400f;
+        public static float motherShipRadius2 = 160000f;
+
+        public static float BotSight = 300f;
+        public static float BotSight2 = 90000f;
+
+        // distance from player that mob will keep shooting bullets
+        public static float BotShotSight = 600f;
+        public static float BotShotSight2 = 360000f;
+
+        // chasing mob stops moving closer to you when he gets this close
+        public static float BotChasingStopDist2 = 10000;
+
+        public static float BotReloadTime = 5f;
+        public static float fastSwarmDmgPerSec = 10f;
+
+        // seconds until bot will update their velocity
+        public static float SecTillVelocityUpdate = .5f;
 
         ////////////////////////////////////////
 

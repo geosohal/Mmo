@@ -77,7 +77,10 @@ namespace Photon.MmoDemo.Common
 
         Velocity = 122,
 
-        IsMegaThrust = 123
+        IsMegaThrust = 123,
+
+        MouseFwd = 124
+
 
 
 

@@ -12,13 +12,15 @@ namespace Photon.MmoDemo.Server.GameSpecific
     public enum BotState
     {
         Patroling,
+        Chasing,
         Attacking
     };
 
     public enum BotType
     {
-        Swarm,  // majority type, fast but weak
+        Swarm,  // majority type, slow but shoot from distance
         Mother, // mother ship
+        FastSwarm,  // majority type, fast but low health and melee only
         Strong  // strong and higher damage but much fewer than swarm
     }
 
@@ -26,12 +28,14 @@ namespace Photon.MmoDemo.Server.GameSpecific
     public class Mob
     {
         public Item mobItem;
-        public Item target;
+        public MmoActor target;
         public Vector currTargetPos;
         public BotState state;
         public BotType type;
         private int hp;
         public bool isDead;
+        private float timeTillReload;   // sec until mob can shoot another bullet
+        private float timeSinceVelUpdate;   // sec since velocity was updated
 
         private MobMother mother;
 
@@ -47,28 +51,32 @@ namespace Photon.MmoDemo.Server.GameSpecific
                 hp = GlobalVars.StrongMobHP;
             else if (type == BotType.Mother)
                 hp = GlobalVars.MotherHP;
+            else if (type == BotType.FastSwarm)
+                hp = GlobalVars.FastSwarmMobHP;
             isDead = false;
+            timeTillReload = 0;
+            timeSinceVelUpdate = 0;
         }
 
+        // patroling state function for setting random target near the mother mob
         public void ChooseNewTargetPosAndSetVel()
         {
             if (mobItem.Disposed)
                 return;
-            Vector randNearbyPos;
-            do
-            {
-               // GlobalVars.log.InfoFormat("trying pos");
-                float randLength = (float)(new Random()).NextDouble() * GlobalVars.patrolRoamDistance;
-                randNearbyPos = mobItem.Position + MathHelper.GetRandomVector(randLength);
-            } while ((randNearbyPos - mother.mobItem.Position).Len2 < GlobalVars.MaxDistFromMotherSq);
-            
-            currTargetPos = randNearbyPos;
-            //  GlobalVars.log.InfoFormat("set new target pos" + currTargetPos.ToString());
+
+            if (type == BotType.Swarm)
+                currTargetPos = mother.mobItem.Position + MathHelper.GetRandomVector(GlobalVars.MaxDistFromMother*.9f);
+            else if (type == BotType.FastSwarm)
+                currTargetPos = mother.mobItem.Position + MathHelper.GetRandomVector(GlobalVars.MaxDistFromMother);
             SetVelToTarget();
         }
 
         private void SetVelToTarget()
         {
+            if (timeSinceVelUpdate > 0)
+                return;
+            else
+                timeSinceVelUpdate = GlobalVars.SecTillVelocityUpdate;
             Vector moveDir = Vector.Normalized(currTargetPos - mobItem.Position);
             if (type == BotType.Swarm)
                 mobItem.Velocity = moveDir * GlobalVars.SwarmSpeed;
@@ -76,6 +84,9 @@ namespace Photon.MmoDemo.Server.GameSpecific
                 mobItem.Velocity = moveDir * GlobalVars.StrongMobSpeed;
             else if (type == BotType.Mother)
                 mobItem.Velocity = moveDir * GlobalVars.MotherSpeed;
+            else if (type == BotType.FastSwarm)
+                mobItem.Velocity = moveDir * GlobalVars.FastSwarmSpeed;
+
             mobItem.Rotation = moveDir;
         }
 
@@ -97,14 +108,7 @@ namespace Photon.MmoDemo.Server.GameSpecific
             if (mobItem.Disposed)
                 return;
             Vector oldPosition = mobItem.Position;
-
-            float distToTargetSq = (currTargetPos - oldPosition).Len2;
-            if (distToTargetSq < 1000 || distToTargetSq > GlobalVars.MaxDistFromMotherSq)
-            {
-                ChooseNewTargetPosAndSetVel();
-              //  GlobalVars.log.InfoFormat(mobItem.Id + "chose new velo");
-            }
-
+            this.timeSinceVelUpdate -= elapsedSeconds;
             if (mobItem.wasBursted)
             {
                 mobItem.secSinceBursted -= elapsedSeconds;
@@ -112,14 +116,76 @@ namespace Photon.MmoDemo.Server.GameSpecific
                     mobItem.wasBursted = false;
             }
 
-            if (mobItem.Velocity.Len2 > GlobalVars.maxShipVelSq+1)
+            if (state == BotState.Patroling)
             {
-               // if (mobItem.wasBursted)
+                float distToTargetSq = (currTargetPos - oldPosition).Len2;
+                if (distToTargetSq < 800 || distToTargetSq > GlobalVars.MaxDistFromMotherSq)
+                {
+                    ChooseNewTargetPosAndSetVel();
+                    //  GlobalVars.log.InfoFormat(mobItem.Id + "chose new velo");
+                }
+                if (mobItem.Velocity.Len2 > GlobalVars.maxShipVelSq + 1)
                 {
                     mobItem.Velocity = mobItem.Velocity * GlobalVars.burstDampening;
                     SetVelToTarget();
                 }
             }
+            if (state == BotState.Chasing)
+            {
+                Vector diff = target.Avatar.Position - mobItem.Position;
+                float distToTarg2 = diff.Len2;
+                if (type == BotType.FastSwarm)
+                {
+                    currTargetPos = target.Avatar.Position;
+                    SetVelToTarget();
+                    // if bot is colliding with it's targetted player do damage
+                    if (distToTarg2 < GlobalVars.swarmShipRadius2)
+                    {
+                        target.Hitpoints = target.Hitpoints - 1;
+
+                        var eventInstance1 = new HpEvent
+                        {
+                            ItemId = target.Avatar.Id,
+                            HpChange = 1,
+                        };
+                        var eventData1 = new EventData((byte)EventCode.HpEvent, eventInstance1);
+                        var message1 = new ItemEventMessage(target.Avatar, eventData1, sp);
+                        target.Avatar.EventChannel.Publish(message1);
+                    }
+                }
+
+                if (type == BotType.Swarm)
+                {
+                    if (distToTarg2 > GlobalVars.BotChasingStopDist2)
+                    {
+                        currTargetPos = target.Avatar.Position;
+                        SetVelToTarget();
+                    }
+                    else
+                    {
+                        mobItem.Velocity = Vector.Zero;
+
+                    }
+                    if (timeTillReload > 0)
+                        timeTillReload -= elapsedSeconds;
+
+                    if (timeTillReload <= 0)    // bullet is ready
+                    {
+                        // check if target is within shoot range
+                        if (distToTarg2 < GlobalVars.BotShotSight2)
+                        {
+                            timeTillReload = GlobalVars.BotReloadTime;
+                            mobItem.Rotation = diff / (float)Math.Sqrt(distToTarg2);
+                            BotManager.MobFireBullet(mobItem);
+
+                        }
+                    }
+                }
+            }
+
+
+
+
 
             //mobItem.Move(oldPosition + mobItem.Velocity * elapsedSeconds);
             mobItem.SetPos(oldPosition + mobItem.Velocity * elapsedSeconds);
@@ -151,17 +217,17 @@ namespace Photon.MmoDemo.Server.GameSpecific
                 return;
 
             float radius = GlobalVars.swarmShipRadius;
-            if ((type == BotType.Swarm))
+            if ((type == BotType.Swarm) || type == BotType.FastSwarm)
                 radius = GlobalVars.swarmShipRadius;
             else if (type == BotType.Mother)
                 radius = GlobalVars.motherShipRadius;
             float radiusSq = radius * radius;
             foreach (Item regionItem in mobItem.CurrentWorldRegion.myitems)
             {
-              //  if (regionItem.Type == (byte)ItemType.Bullet)
-             //       GlobalVars.log.InfoFormat("mob col check w " + regionItem.Id.ToString());
+                //  if (regionItem.Type == (byte)ItemType.Bullet)
+                //       GlobalVars.log.InfoFormat("mob col check w " + regionItem.Id.ToString());
                 if (CollisionHelper.CheckItemCollisionAgainstProjectile(mobItem, regionItem,
-                    ref this.hp, sp, null, radiusSq, radius))
+                    ref this.hp, sp, (MmoActorOperationHandler)BotManager.serverPeer.CurrentOperationHandler, radiusSq, radius))
                 {
                     // check if mob is dead
                     if (this.hp <= 0)
@@ -182,6 +248,12 @@ namespace Photon.MmoDemo.Server.GameSpecific
             mobItem.CurrentWorldRegion.myitems.Remove(mobItem);
             mobItem.World.ItemCache.RemoveItem(mobItem.Id);
             BotManager.mobTable.Remove(mobItem.Id);
+        }
+
+        public void ChangeToChaseState(MmoActor target)
+        {
+            this.target = target;
+            state = BotState.Chasing;
         }
     }
 
@@ -211,7 +283,7 @@ namespace Photon.MmoDemo.Server.GameSpecific
         private static List<MobMother> motherMobs;
         private static Random r;   // todo deterministic rand
         public static bool IsInitialized;
-        private static MmoPeer serverPeer;
+        public static MmoPeer serverPeer;
         private static System.Timers.Timer timer;
         private static Stopwatch watch;
         private static World world;
@@ -264,10 +336,23 @@ namespace Photon.MmoDemo.Server.GameSpecific
 
             timer = new System.Timers.Timer();
             timer.Elapsed += new System.Timers.ElapsedEventHandler(Update);
-            timer.Interval = 50; // 500ms
+            timer.Interval = 50; // 50ms
             timer.Enabled = true;
             watch = new Stopwatch();
             watch.Start();
+        }
+
+        public static void MobFireBullet(Item mob)
+        {
+            GlobalVars.log.InfoFormat("mob" + mob.Id + "firing");
+            var request = new OperationRequest {  OperationCode = (byte)OperationCode.FireBullet, Parameters = new Dictionary<byte, object>() };
+            request.Parameters.Add((byte)ParameterCode.ItemId, mob.Id);
+            request.Parameters.Add((byte)ParameterCode.Rotation, mob.Rotation);
+            request.Parameters.Add((byte)ParameterCode.Position, mob.Position);
+            SendParameters sp = MmoActorOperationHandler.GetDefaultSP();
+            ((MmoActorOperationHandler)serverPeer.CurrentOperationHandler).OperationFireBullet(serverPeer, request, sp);
+
+
         }
 
         private static void Update(object source, System.Timers.ElapsedEventArgs e)
@@ -344,7 +429,27 @@ namespace Photon.MmoDemo.Server.GameSpecific
 
 
         }
-
+        /*
+         *             Item botitem;
+            string botId;
+            Mob newMob;
+            if (r.Next(10) < 3)
+            {
+                botId = "bo" + GlobalVars.runningBotCount.ToString();
+                botitem =  new Item(pos, Vector.Zero, new Hashtable(),
+            (MmoActorOperationHandler)serverPeer.CurrentOperationHandler, botId, (byte)ItemType.Bot, world);
+                newMob = new Mob(botitem, mother, BotType.Swarm);
+            }
+            else
+            {
+                botId = "bf" + GlobalVars.runningBotCount.ToString();
+                botitem = new Item(pos, Vector.Zero, new Hashtable(),
+        (MmoActorOperationHandler)serverPeer.CurrentOperationHandler, botId, (byte)ItemType.Bot, world);
+                newMob = new Mob(botitem, mother, BotType.FastSwarm);
+            }
+            GlobalVars.log.InfoFormat("adding bot " + botId);
+            GlobalVars.runningBotCount = (GlobalVars.runningBotCount + 1)%9999;
+  */
         public static void AddMobToMotherrHelper(Vector pos, MobMother mother, World world)
         {
             string botId = "bo" + GlobalVars.runningBotCount.ToString();
@@ -352,10 +457,27 @@ namespace Photon.MmoDemo.Server.GameSpecific
             GlobalVars.runningBotCount = (GlobalVars.runningBotCount + 1)%9999;
             Item botitem = new Item(pos, Vector.Zero, new Hashtable(), 
                 (MmoActorOperationHandler)serverPeer.CurrentOperationHandler, botId, (byte)ItemType.Bot, world);
-            Mob newMob = new Mob(botitem, mother, BotType.Swarm);
+            Mob newMob;
+            if (r.Next(10) < 3)
+            {
+                newMob = new Mob(botitem, mother, BotType.Swarm);
+            }
+            else
+            {
+                newMob = new Mob(botitem, mother, BotType.FastSwarm);
+            }
             newMob.ChooseNewTargetPosAndSetVel();
             mother.childMobs.Add(newMob);
             SpawnMobHelper(newMob);
+        }
+
+        public static void ChangeMobToChaseState(string mobId, MmoActor targetPlayerItem)
+        {
+            bool hasKey = mobTable.ContainsKey(mobId);
+            if (hasKey)
+            {
+                mobTable[mobId].ChangeToChaseState(targetPlayerItem);
+            }
         }
 
         private static void SpawnMobHelper(Mob newMob)
@@ -378,6 +500,9 @@ namespace Photon.MmoDemo.Server.GameSpecific
             var eventData = new EventData((byte)EventCode.BotSpawn, eventInstance);
             var message = new ItemEventMessage(newMob.mobItem, eventData, sp);
             newMob.mobItem.EventChannel.Publish(message);
+            ((MmoActorOperationHandler)serverPeer.CurrentOperationHandler).AddItem(newMob.mobItem);
+            //todo add bot to radar, just check that the world is the right one
+            // ((World)this.World).Radar.AddItem(item, operation.Position);
         }
 
         private static Vector GetRandomPosition()
