@@ -11,7 +11,7 @@ namespace Photon.MmoDemo.Server
 {
     static class GlobalVars
     {
-        public static bool IsDebugMode = false;
+        public static bool IsDebugMode = true;
         public static readonly ILogger log = LogManager.GetCurrentClassLogger();
 
         // global counter for number of bullets used for naming bullet's item id
@@ -62,7 +62,7 @@ namespace Photon.MmoDemo.Server
         public static float laserOnTime = 3.5f;  // also in client for visuals: mlaserTimeLeft
 
         public static float bombTime = 4.5f;  // time to explodey
-        public static float bombDmg = 125f;
+        public static float bombDmg = 121f;
         public static float bombSpeed = 130f;
         public static float bombRadius = 600f;
         public static float bombRadius2 = 360000f;
@@ -77,7 +77,7 @@ namespace Photon.MmoDemo.Server
         public static int HPboxCount = 0;   // counter that we increment to make hp item ids
         public static int HPradius = 30;
         public static int HPradius2 = 900;
-        public static int RandHPsPerActor = 10; // spawn this many random hp boxes for each player in game
+        public static int RandHPsPerActor = 0; // spawn this many random hp boxes for each player in game
 
         /// <summary>
         /// constants and variables related to bots
@@ -86,10 +86,10 @@ namespace Photon.MmoDemo.Server
         public static int runningBotCount = 0;
         public static int motherBotCount;
 
-        public static int MaxSwarmPerMother = 30;
+        public static int MaxSwarmPerMother = 35;
         public static int MaxMotherBots = 1;
-        public static int OddsStrongBot = 10;   // chance out of 100 that swarm bot is a strong one
-        public static int SecForMotherToRespawn = 22;
+        public static int OddsStrongBot = 10;   // not in use. chance out of 100 that swarm bot is a strong one
+        public static int SecForMotherToRespawn = 9;
 
         public static int SecMaxForSwarmSpawn = 8; // when swarm is almost full it takes this long for respawn
         public static int SecMinForSwarmSpawn = 2;  // when swarm is nera empty it takes this long
@@ -99,10 +99,10 @@ namespace Photon.MmoDemo.Server
 
         public static int FastSwarmMobHP = 11;
         public static int SwarmMobHP = 30;  // also in BotBehaviour.cs
-        public static int MotherHP = 600;
+        public static int MotherHP = 660;
         public static int StrongMobHP = 12;
 
-        public static int FastSwarmSpeed = 160;
+        public static int FastSwarmSpeed = 177;
         public static int SwarmSpeed = 85;
         public static int MotherSpeed = 20;
         public static int StrongMobSpeed = 40;
@@ -118,8 +118,8 @@ namespace Photon.MmoDemo.Server
         public static float BotSight2 = 90000f;
 
         // distance from player that mob will keep shooting bullets
-        public static float BotShotSight = 600f;
-        public static float BotShotSight2 = 360000f;
+        public static float BotShotSight = 900f;
+        public static float BotShotSight2 = 810000f;
 
         // chasing mob stops moving closer to you when he gets this close
         public static float BotChasingStopDist2 = 10000;

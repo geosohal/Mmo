@@ -92,6 +92,7 @@
     <Compile Include="Events\ItemSubscribed.cs" />
     <Compile Include="Events\ItemUnsubscribed.cs" />
     <Compile Include="Events\LaserFired.cs" />
+    <Compile Include="Events\Mob.cs" />
     <Compile Include="Events\RadarUpdate.cs" />
     <Compile Include="Events\WorldExited.cs">
       <SubType>Code</SubType>

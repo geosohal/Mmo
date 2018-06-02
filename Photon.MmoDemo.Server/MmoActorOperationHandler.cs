@@ -57,7 +57,7 @@ namespace Photon.MmoDemo.Server
         bool firstUpdate;
         bool wasdMode;
 
-        bool isBotMan;
+        public bool isBotMan;
 
         Vector mouseFwd;
         
@@ -862,14 +862,21 @@ namespace Photon.MmoDemo.Server
             {
                 log.InfoFormat("removing projectil " + str);
                 Item itemToRemove = ownedItems[str];
+                itemToRemove.World.ItemCache.RemoveItem(itemToRemove.Id);
+                bool removed = this.RemoveItem(itemToRemove);
+
                 itemToRemove.CurrentWorldRegion.myitems.Remove(itemToRemove);
                 itemToRemove.Destroy();
                 itemToRemove.Dispose();
-                bool removed = this.RemoveItem(itemToRemove);
-                ownedItems[str].World.ItemCache.RemoveItem(itemToRemove.Id);
-                //var eventInstance = new ItemDestroyed { ItemId = itemToRemove.Id };
-                //var eventData = new EventData((byte)EventCode.ItemDestroyed, eventInstance);
-                //this.Peer.SendEvent(eventData, new SendParameters { ChannelId = Settings.ItemEventChannel });
+                // debug code
+                foreach (KeyValuePair<byte, InterestArea> iaEntry in interestAreas)
+                {
+                    foreach (Region reg in iaEntry.Value.regions)
+                    {
+
+                        log.InfoFormat("items in region[" + reg.ToString() + "]" + reg.myitems.Count);
+                    }
+                }
             }
         }
 
@@ -1686,7 +1693,7 @@ namespace Photon.MmoDemo.Server
         private OperationResponse ItemOperationAttachInterestArea(
             Item item, AttachInterestArea operation, InterestArea interestArea, SendParameters sendParameters)
         {
-            log.DebugFormat("io attach interest area");
+            log.InfoFormat("io attach interest area");
             if (item.Disposed)
             {
                 return operation.GetOperationResponse((int)ReturnCode.ItemNotFound, "ItemNotFound13");

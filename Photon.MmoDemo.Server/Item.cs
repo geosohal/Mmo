@@ -238,44 +238,48 @@ namespace Photon.MmoDemo.Server
                 ItemPositionMessage message = this.GetPositionUpdateMessage(this.Position);
                 this.positionUpdateChannel.Publish(message);
             }
-
-            // update subscriptions if region changed
-            Region prevRegion = this.CurrentWorldRegion;
-            Region newRegion = this.World.GetRegion(this.Position);
-
-            if (newRegion != this.CurrentWorldRegion)
+         //   Object obj = new Object();
+         //   lock (obj)
             {
-                if (this.CurrentWorldRegion != null)
+                // update subscriptions if region changed
+                Region prevRegion = this.CurrentWorldRegion;
+                Region newRegion = this.World.GetRegion(this.Position);
+
+                if (newRegion != this.CurrentWorldRegion)
                 {
-                    this.CurrentWorldRegion.myitems.Remove(this);
+
+                    if (this.CurrentWorldRegion != null)
+                    {
+                        this.CurrentWorldRegion.myitems.Remove(this);
+                    }
+                    this.CurrentWorldRegion = newRegion;
+
+                    if (this.regionSubscription != null)
+                    {
+                        this.regionSubscription.Dispose();
+                    }
+
+                    var snapshot = this.GetItemSnapshot();
+                    var regMessage = new ItemRegionChangedMessage(prevRegion, newRegion, snapshot);
+
+                    if (prevRegion != null)
+                    {
+                        prevRegion.DelistItem(this);    // remove from regions item list
+                        prevRegion.ItemRegionChangedChannel.Publish(regMessage);
+                    }
+                    if (newRegion != null)
+                    {
+                        newRegion.EnlistItem(this);     // add to regions item list
+                        newRegion.ItemRegionChangedChannel.Publish(regMessage);
+
+                        this.regionSubscription = new UnsubscriberCollection(
+                            this.EventChannel.Subscribe(this.Fiber, (m) => newRegion.ItemEventChannel.Publish(m)), // route events through region to interest area
+                            newRegion.RequestItemEnterChannel.Subscribe(this.Fiber, (m) => { m.InterestArea.OnItemEnter(this.GetItemSnapshot()); }), // region entered interest area fires message to let item notify interest area about enter
+                            newRegion.RequestItemExitChannel.Subscribe(this.Fiber, (m) => { m.InterestArea.OnItemExit(this); }) // region exited interest area fires message to let item notify interest area about exit
+                        );
+                    }
+
                 }
-                this.CurrentWorldRegion = newRegion;
-
-                if (this.regionSubscription != null)
-                {
-                    this.regionSubscription.Dispose();
-                }
-
-                var snapshot = this.GetItemSnapshot();
-                var regMessage = new ItemRegionChangedMessage(prevRegion, newRegion, snapshot);
-
-                if (prevRegion != null)
-                {
-                    prevRegion.DelistItem(this);    // remove from regions item list
-                    prevRegion.ItemRegionChangedChannel.Publish(regMessage);
-                }
-                if (newRegion != null)
-                {
-                    newRegion.EnlistItem(this);     // add to regions item list
-                    newRegion.ItemRegionChangedChannel.Publish(regMessage);
-
-                    this.regionSubscription = new UnsubscriberCollection(
-                        this.EventChannel.Subscribe(this.Fiber, (m) => newRegion.ItemEventChannel.Publish(m)), // route events through region to interest area
-                        newRegion.RequestItemEnterChannel.Subscribe(this.Fiber, (m) => { m.InterestArea.OnItemEnter(this.GetItemSnapshot()); }), // region entered interest area fires message to let item notify interest area about enter
-                        newRegion.RequestItemExitChannel.Subscribe(this.Fiber, (m) => { m.InterestArea.OnItemExit(this); }) // region exited interest area fires message to let item notify interest area about exit
-                    );
-                }
-
             }
         }
 

@@ -218,7 +218,7 @@ namespace Photon.MmoDemo.Client
             {
                 item.PropertyRevisionLocal = (int)eventData[(byte)ParameterCode.PropertiesRevision];
 
-                if (!item.IsMine)
+                if (!item.IsMine && item.Type == ItemType.Avatar)
                 {
                     var propertiesSet = (Hashtable)eventData[(byte)ParameterCode.PropertiesSet];
 

@@ -278,7 +278,7 @@ namespace Photon.MmoDemo.Server
             return new OperationResponse(operationRequest.OperationCode)
                 {
                     ReturnCode = (int)ReturnCode.OperationNotSupported,
-                    DebugMessage = "OperationNotSupported: " + operationRequest.OperationCode
+                    DebugMessage = "initial OperationNotSupported: " + operationRequest.OperationCode
                 };
         }
 

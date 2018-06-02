@@ -19,7 +19,8 @@ namespace Photon.MmoDemo.Server
                                               // how much of the first update is already done due to being applied at spawn
         public Vector forward;
 
-        public Bullet(Vector position, Vector velocity, Hashtable properties, MmoActorOperationHandler owner, string id, byte type, World world)
+        public Bullet(Vector position, Vector velocity, Hashtable properties, MmoActorOperationHandler owner, string id, 
+            byte type, World world)
             : base(position, velocity, properties, owner, id, type, world)
         {
             timeToLive = GlobalVars.bulletLiveTime;
