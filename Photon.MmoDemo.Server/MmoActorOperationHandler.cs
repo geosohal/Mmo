@@ -247,6 +247,7 @@ namespace Photon.MmoDemo.Server
                     }
                     else
                     {
+                        log.InfoFormat("operationAddIA couldnt find item");
                         // second parameter (peer) allows us to send an error event to the client (in case of an error)
                         item.Fiber.Enqueue(() => this.ExecItemOperation(() => ItemOperationAddInterestArea(item, operation, interestArea), sendParameters));
                         // send response later
@@ -860,23 +861,29 @@ namespace Photon.MmoDemo.Server
             }
             foreach (string str in removeList)
             {
-                log.InfoFormat("removing projectil " + str);
+                
                 Item itemToRemove = ownedItems[str];
-                itemToRemove.World.ItemCache.RemoveItem(itemToRemove.Id);
+                
                 bool removed = this.RemoveItem(itemToRemove);
-
+                
                 itemToRemove.CurrentWorldRegion.myitems.Remove(itemToRemove);
                 itemToRemove.Destroy();
                 itemToRemove.Dispose();
-                // debug code
-                foreach (KeyValuePair<byte, InterestArea> iaEntry in interestAreas)
-                {
-                    foreach (Region reg in iaEntry.Value.regions)
-                    {
+                itemToRemove.World.ItemCache.RemoveItem(itemToRemove.Id);
+                itemToRemove.Fiber.DeregisterSubscription(itemToRemove.CurrentWorldRegion.RequestItemEnterChannel);
+                itemToRemove.Fiber.DeregisterSubscription(itemToRemove.CurrentWorldRegion.RequestItemExitChannel);
+                bool removed2 = ownedItems.Remove(str);
+                log.InfoFormat("removing projectil " + str + removed.ToString() + "disposed: " + itemToRemove.Disposed.ToString());
 
-                        log.InfoFormat("items in region[" + reg.ToString() + "]" + reg.myitems.Count);
-                    }
-                }
+                // debug code
+                //foreach (KeyValuePair<byte, InterestArea> iaEntry in interestAreas)
+                //{
+                //    foreach (Region reg in iaEntry.Value.regions)
+                //    {
+
+                //        log.InfoFormat("items in region[" + reg.ToString() + "]" + reg.myitems.Count);
+                //    }
+                //}
             }
         }
 
@@ -1342,7 +1349,7 @@ namespace Photon.MmoDemo.Server
         /// </remarks>
         public OperationResponse OperationSubscribeItem(PeerBase peer, OperationRequest request, SendParameters sendParameters)
         {
-            log.DebugFormat("sub item operation");
+            log.InfoFormat("sub item operation");
             var operation = new SubscribeItem(peer.Protocol, request);
             if (!operation.IsValid)
             {
@@ -1678,6 +1685,7 @@ namespace Photon.MmoDemo.Server
 
         private void ExitWorld()
         {
+            log.InfoFormat("exiting " + this.Avatar.Id);
             var worldExited = new WorldExited { WorldName = ((World)this.World).Name };
             this.Dispose();
 
@@ -1802,7 +1810,7 @@ namespace Photon.MmoDemo.Server
                 newBullet.UpdateRegionSimple();
                 
               //  a different way to spawn item by specifics, (found out it had problems moving the item though)
-             //    log.InfoFormat("adding bullet {0}, pos: {1}, ROT: {2}", newBullet.Id, operation.Position.ToString(), operation.Rotation.ToString());
+                 log.InfoFormat("adding bullet {0}, pos: {1}, ROT: {2}", newBullet.Id, operation.Position.ToString(), operation.Rotation.ToString());
                 // send event
                 var eventInstance = new BulletFired
                 {
@@ -2022,7 +2030,7 @@ namespace Photon.MmoDemo.Server
 
         private OperationResponse ItemOperationSubscribeItem(Item item, SubscribeItem operation)
         {
-            log.DebugFormat("io sub");
+            log.InfoFormat("io sub");
             if (item.Disposed)
             {
                 return operation.GetOperationResponse((int)ReturnCode.ItemNotFound, "ItemNotFound");

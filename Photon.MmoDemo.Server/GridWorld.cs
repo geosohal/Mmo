@@ -85,6 +85,7 @@ namespace Photon.MmoDemo.Server
             }
             else
             {
+                GlobalVars.log.InfoFormat("null region requested in GetRegion" + position.ToString());
                 return null;
             }
         }

@@ -97,6 +97,7 @@ namespace Photon.MmoDemo.Server
             this.Channel.ClearSubscribers();
             foreach (IDisposable unsubscriber in this.itemSubscriptions.Values)
             {
+                GlobalVars.log.InfoFormat("radar dispose");
                 unsubscriber.Dispose();
             }
 

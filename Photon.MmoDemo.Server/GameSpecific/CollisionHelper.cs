@@ -48,6 +48,8 @@ namespace Photon.MmoDemo.Server.GameSpecific
                         // send itemdestroyed message for player's ship item
                     }
                     ((Bullet)projectile).SetDead();
+                  //  projectile.SetPos(new Vector(-60000, -60000));
+                   // projectile.UpdateRegionSimple();
                     return true;
                 }
             }

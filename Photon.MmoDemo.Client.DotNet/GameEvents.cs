@@ -140,13 +140,13 @@ namespace Photon.MmoDemo.Client
 
                 case EventCode.BulletSpawn:
                     itemId = (string)eventData[(byte)ParameterCode.ItemId];
-                //    line += " id: " + itemId + "\n";
+                    line += " bulletspawn id: " + itemId + "\n";
                     Item newbullet = new Item(this, itemId, ItemType.Bullet);
                     Vector pos = (Vector)eventData[(byte)ParameterCode.Position];
                     Vector rot = (Vector)eventData[(byte)ParameterCode.Rotation];
                     newbullet.SetPositions(pos, pos, rot, rot);
                     AddItem(newbullet);
-               //     System.IO.File.AppendAllText(@"D:\client-" + Avatar.Id + ".log", line);
+                    System.IO.File.AppendAllText(@"C:\client-" + Avatar.Id + ".log", line);
                     return;
 
                 case EventCode.SaberSpawn:
@@ -275,15 +275,16 @@ namespace Photon.MmoDemo.Client
             Vector position = (Vector)eventData[(byte)ParameterCode.Position];
             var cameraId = (byte)eventData[(byte)ParameterCode.InterestAreaId];
             Vector rotation = eventData.Contains((byte)ParameterCode.Rotation) ? (Vector)eventData[(byte)ParameterCode.Rotation] : Vector.Zero;
-
+            string line = "subscribed adding item attempt only: " + itemId + "\n";
+            System.IO.File.AppendAllText(@"C:\client-" + Avatar.Id + ".log", line);
             Item item;
             if (!this.TryGetItem(itemId, out item)) // register item first time seen 
             {
                 item = new Item(this, itemId, itemType);
                 if (itemType == ItemType.Resource)
                     item.SetPositions(position, position, rotation, rotation);
-               // string line = "subscribed adding item: " + item.Id + "\n";
-               // System.IO.File.AppendAllText(@"D:\client-" + Avatar.Id+ ".log", line);
+                line = "subscribed adding item: " + item.Id + "\n";
+                System.IO.File.AppendAllText(@"C:\client-" + Avatar.Id+ ".log", line);
                 this.AddItem(item);
                 item.GetProperties();
             } 

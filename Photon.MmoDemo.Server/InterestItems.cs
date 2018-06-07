@@ -105,6 +105,7 @@ namespace Photon.MmoDemo.Server
             foreach (KeyValuePair<Item, IDisposable> pair in this.manualItemSubscriptions)
             {
                 pair.Value.Dispose();
+                GlobalVars.log.InfoFormat("clear manual sub");
             }
 
             this.manualItemSubscriptions.Clear();
@@ -114,6 +115,7 @@ namespace Photon.MmoDemo.Server
         {
             if (disposing)
             {
+                GlobalVars.log.InfoFormat("interest items dispose");
                 this.itemEventFiber.Dispose();
                 this.subscriptionManagementFiber.Dispose();
                 this.ClearManualSubscriptions();

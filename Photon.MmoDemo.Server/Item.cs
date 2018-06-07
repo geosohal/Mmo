@@ -138,7 +138,9 @@ namespace Photon.MmoDemo.Server
 
         ~Item()
         {
+            
             this.Dispose(false);
+            Fiber.Dispose();
         }
 
         public IFiber Fiber { get { return this.Owner.Peer.RequestFiber; } }
@@ -266,6 +268,19 @@ namespace Photon.MmoDemo.Server
                     {
                         prevRegion.DelistItem(this);    // remove from regions item list
                         prevRegion.ItemRegionChangedChannel.Publish(regMessage);
+
+                        // i think for non avatar items like bullet - since they are not tied to ClientInterestArea
+                        // their OnItemEnter and OnItemExit are empty or something idk. this was an attempt to
+                        // manually unsub the fiber so that the on item enter/exit events don't keep getting called
+                        // a good test would be to make the bullet last only .1sec so that it stays in only 1 region
+                            // then see if the current setup removes the fiber subscription
+                        //if (this.type == (byte)ItemType.Bullet)
+                        //{
+                        //    Fiber.DeregisterSubscription(prevRegion.RequestItemEnterChannel);
+                        //    Fiber.DeregisterSubscription(prevRegion.RequestItemExitChannel);
+                        //    Fiber.DeregisterSubscription(prevRegion.RequestItemExitChannel);
+                        //}
+                     //   prevRegion.RequestItemEnterChannel.
                     }
                     if (newRegion != null)
                     {
@@ -294,6 +309,8 @@ namespace Photon.MmoDemo.Server
                     this.CurrentWorldRegion.myitems.Remove(this);
                 }
                 this.CurrentWorldRegion = newRegion;
+                if (newRegion == null)
+                    return;
                 newRegion.EnlistItem(this);     // add to regions item list
                 this.regionSubscription = new UnsubscriberCollection(
                     this.EventChannel.Subscribe(this.Fiber, (m) => newRegion.ItemEventChannel.Publish(m)), // route events through region to interest area
@@ -366,7 +383,11 @@ namespace Photon.MmoDemo.Server
                 if (this.regionSubscription != null)
                 {
                     this.regionSubscription.Dispose();
+                    GlobalVars.log.InfoFormat("region sub disposed for: " + this.id);
                 }
+                else
+                    GlobalVars.log.InfoFormat("region sub was null for: " + this.id);
+
                 this.CurrentWorldRegion = null;
                 this.disposeChannel.Publish(new ItemDisposedMessage(this));
                 this.eventChannel.Dispose();

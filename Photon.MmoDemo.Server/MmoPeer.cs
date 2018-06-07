@@ -54,6 +54,7 @@ namespace Photon.MmoDemo.Server
         {
             if (disposing)
             {
+                GlobalVars.log.InfoFormat("peer dispose");
                 if (this.RadarSubscription != null)
                 {
                     this.RadarSubscription.Dispose();

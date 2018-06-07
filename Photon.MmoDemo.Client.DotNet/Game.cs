@@ -129,8 +129,8 @@ namespace Photon.MmoDemo.Client
 
         public void AddItem(Item item)
         {
-          //  string line = "adding item: " + item.Id + "\n";
-          //  System.IO.File.AppendAllText(@"D:\client-" + Avatar.Id + ".log", line);
+            string line = "adding item: " + item.Id + "\n";
+            System.IO.File.AppendAllText(@"C:\client-" + Avatar.Id + ".log", line);
             if (!itemCache.ContainsKey(item.Id))
             {
                 itemCache.Add(item.Id, item);
@@ -332,7 +332,7 @@ namespace Photon.MmoDemo.Client
                     }
                 }
 
-             //   this.listener.LogDebug(builder.ToString());
+                this.listener.LogDebug(builder.ToString());
             }
 
             this.OnEventReceive(ev);

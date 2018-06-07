@@ -56,6 +56,7 @@ namespace Photon.MmoDemo.Server
             base.OnRegionExit(region);
             IDisposable messageReceiver = this.eventChannelSubscriptions[region];
             this.eventChannelSubscriptions.Remove(region);
+    //        GlobalVars.log.InfoFormat("region exist");
             messageReceiver.Dispose();
         }
 
@@ -73,8 +74,19 @@ namespace Photon.MmoDemo.Server
         /// </summary>
         public override void OnItemEnter(ItemSnapshot snapshot)
         {
+
             base.OnItemEnter(snapshot);
             var item = snapshot.Source;
+
+            GlobalVars.log.InfoFormat("OnItemEnter: " + item.Id + "disposed" + item.Disposed);
+
+            // temp fix for projectiles that get destroyed but are still tied to on RequestItemEnterChannel
+            // of certain regions
+            // an alternative to this hack would be to never subsribe projectiles to RequestItemEnterChannel, which
+            // would be faster but would mean a projectile created in a foreign interest area could not hit you...
+            
+            if (item.Disposed) 
+                return;
             var subscribeEvent = new ItemSubscribed
             {
                 ItemId = item.Id,

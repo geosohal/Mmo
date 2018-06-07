@@ -153,6 +153,7 @@ namespace Photon.MmoDemo.Server
         {
             if (disposing)
             {
+                GlobalVars.log.InfoFormat("IA dispose");
                 this.subscriptionManagementFiber.Dispose();
 
                 // detach
@@ -189,6 +190,7 @@ namespace Photon.MmoDemo.Server
             IDisposable subscription;
             if (this.regionSubscriptions.TryGetValue(region, out subscription))
             {
+            //    GlobalVars.log.InfoFormat("IA region exit dispose");
                 subscription.Dispose();
                 this.regionSubscriptions.Remove(region);
             }
@@ -208,6 +210,8 @@ namespace Photon.MmoDemo.Server
             }
             else if (r1) // item enters area
             {
+                GlobalVars.log.InfoFormat("item enters area:" + " id:" +
+                    message.ItemSnapshot.Source.Id);
                 this.OnItemEnter(message.ItemSnapshot);
             }
                 
