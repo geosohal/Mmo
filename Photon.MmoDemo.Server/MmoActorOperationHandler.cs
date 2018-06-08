@@ -870,8 +870,6 @@ namespace Photon.MmoDemo.Server
                 itemToRemove.Destroy();
                 itemToRemove.Dispose();
                 itemToRemove.World.ItemCache.RemoveItem(itemToRemove.Id);
-                itemToRemove.Fiber.DeregisterSubscription(itemToRemove.CurrentWorldRegion.RequestItemEnterChannel);
-                itemToRemove.Fiber.DeregisterSubscription(itemToRemove.CurrentWorldRegion.RequestItemExitChannel);
                 bool removed2 = ownedItems.Remove(str);
                 log.InfoFormat("removing projectil " + str + removed.ToString() + "disposed: " + itemToRemove.Disposed.ToString());
 

@@ -21,8 +21,8 @@ namespace Photon.MmoDemo.Server
 
 
 
-        public static float bulletSpeed = 603f; // value moved to clients DemoSettings
-        public static float bulletLiveTime = 8f;
+        public static float bulletSpeed = 653f; // value moved to clients DemoSettings
+        public static float bulletLiveTime = 3f;
 
         public static int msToUpdate = 50; // ms to wait to call update on server side
                                             // for collisions and velocity/position updates
@@ -86,8 +86,8 @@ namespace Photon.MmoDemo.Server
         public static int runningBotCount = 0;
         public static int motherBotCount;
 
-        public static int MaxSwarmPerMother = 0;
-        public static int MaxMotherBots = 0;
+        public static int MaxSwarmPerMother = 36;
+        public static int MaxMotherBots = 1;
         public static int OddsStrongBot = 10;   // not in use. chance out of 100 that swarm bot is a strong one
         public static int SecForMotherToRespawn = 9;
 

@@ -249,11 +249,6 @@ namespace Photon.MmoDemo.Server
 
                 if (newRegion != this.CurrentWorldRegion)
                 {
-
-                    if (this.CurrentWorldRegion != null)
-                    {
-                        this.CurrentWorldRegion.myitems.Remove(this);
-                    }
                     this.CurrentWorldRegion = newRegion;
 
                     if (this.regionSubscription != null)
@@ -273,14 +268,14 @@ namespace Photon.MmoDemo.Server
                         // their OnItemEnter and OnItemExit are empty or something idk. this was an attempt to
                         // manually unsub the fiber so that the on item enter/exit events don't keep getting called
                         // a good test would be to make the bullet last only .1sec so that it stays in only 1 region
-                            // then see if the current setup removes the fiber subscription
+                        // then see if the current setup removes the fiber subscription
                         //if (this.type == (byte)ItemType.Bullet)
                         //{
                         //    Fiber.DeregisterSubscription(prevRegion.RequestItemEnterChannel);
                         //    Fiber.DeregisterSubscription(prevRegion.RequestItemExitChannel);
-                        //    Fiber.DeregisterSubscription(prevRegion.RequestItemExitChannel);
+                        //    Fiber.DeregisterSubscription(this.eventChannel);
                         //}
-                     //   prevRegion.RequestItemEnterChannel.
+
                     }
                     if (newRegion != null)
                     {
@@ -298,19 +293,30 @@ namespace Photon.MmoDemo.Server
             }
         }
 
-        // use this region update for when a new item is added and it has no previous region
+        // use this region update for when a new item has no interest area and doesnt need to update position
+        // (position update for it is done elsewhere) this is useful for projectiles and perhaps bots
         public void UpdateRegionSimple()
         {
             Region newRegion = this.World.GetRegion(this.Position);
+            Region prevRegion = this.CurrentWorldRegion;
+
             if (newRegion != this.CurrentWorldRegion)
             {
-                if (this.CurrentWorldRegion != null)
+                if (this.regionSubscription != null)
                 {
-                    this.CurrentWorldRegion.myitems.Remove(this);
+                    this.regionSubscription.Dispose();
                 }
+                if (prevRegion != null)
+                {
+                    prevRegion.DelistItem(this);    // remove from regions item list
+                }
+
                 this.CurrentWorldRegion = newRegion;
                 if (newRegion == null)
+                {
+                    log.InfoFormat("new region was NULL");
                     return;
+                }
                 newRegion.EnlistItem(this);     // add to regions item list
                 this.regionSubscription = new UnsubscriberCollection(
                     this.EventChannel.Subscribe(this.Fiber, (m) => newRegion.ItemEventChannel.Publish(m)), // route events through region to interest area

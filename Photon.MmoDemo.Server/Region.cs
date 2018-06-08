@@ -86,14 +86,14 @@ namespace Photon.MmoDemo.Server
 
         public void EnlistItem(Item newitem)
         {
-            if (GlobalVars.IsDebugMode && myitems.Contains(newitem))
+            if (myitems.Contains(newitem))
             {
-                GlobalVars.log.InfoFormat("item was already in region");
+                GlobalVars.log.InfoFormat("item was already in region" + newitem.Id);
             }
             else
             {
                 if (GlobalVars.IsDebugMode)
-                    GlobalVars.log.InfoFormat("enlisting tiem to region: " + this.ToString());
+                    GlobalVars.log.InfoFormat("enlisting tiem to region: " + this.ToString() + "id" + newitem.Id + " ct:" + myitems.Count.ToString());
                 myitems.Add(newitem);
             }
         }
@@ -104,7 +104,10 @@ namespace Photon.MmoDemo.Server
                 GlobalVars.log.InfoFormat("delisting tiem from region " + itemToRemove.Id + ToString());
 
             if (!myitems.Remove(itemToRemove))
-                GlobalVars.log.InfoFormat("requested to remove unlisted item from region " + itemToRemove.Id + ToString());
+            {
+                GlobalVars.log.InfoFormat("   requested to remove unlisted item from region " + itemToRemove.Id + ToString());
+                GlobalVars.log.InfoFormat("   myitems count: " + myitems.Count.ToString());
+            }
         }
 
         public override string ToString()
