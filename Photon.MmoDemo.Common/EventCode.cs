@@ -52,7 +52,9 @@ namespace Photon.MmoDemo.Common
 
         StartSuperFast,
 
-        EndSuperFast
+        EndSuperFast,
+
+        SpawnAsteroid   // tells client to spawn asteroid
 
 
 

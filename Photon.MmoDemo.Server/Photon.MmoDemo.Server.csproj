@@ -98,6 +98,7 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Bullet.cs" />
+    <Compile Include="GameSpecific\AsteroidMaker.cs" />
     <Compile Include="GameSpecific\BotManager.cs" />
     <Compile Include="GameSpecific\CollisionHelper.cs" />
     <Compile Include="GameSpecific\MathHelper.cs" />

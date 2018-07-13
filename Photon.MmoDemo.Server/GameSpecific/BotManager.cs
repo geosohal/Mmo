@@ -15,6 +15,8 @@ namespace Photon.MmoDemo.Server.GameSpecific
     /// bot manager is a global static class that adds mother ship mobs which then spawn
     /// smaller mobs. mobs are put into regions and update is called to update mob positions
     /// bot updates may be made at different times from other updates in actoroperationhandler
+    /// 
+    /// update: this also handles spawning and storing asteroids
     /// </summary>
 
     public static class BotManager
@@ -29,7 +31,17 @@ namespace Photon.MmoDemo.Server.GameSpecific
         private static float timeTillMotherSpawn;
         private static SendParameters Sp;
         public static Dictionary<string, Mob> mobTable;
-        
+
+
+        // asteroid make members:
+        public static float xradius = 10f; // new asteroids get a random position xradius from the x position of the maker
+        public static float speedX = 0f;
+        public static float speedVarianceX = .1f;
+        public static float speedY = 1f;
+        public static float speedVarianceY = .3f;
+        public static float timeToMake = .6f;
+        private static float timeSinceLastMake = float.MaxValue;
+
 
         static BotManager()
         {
@@ -146,6 +158,27 @@ namespace Photon.MmoDemo.Server.GameSpecific
 
                 RemoveDeadMobsFromMother(mm);
             }
+
+            // Asteroid spawner update:
+            //if (timeSinceLastMake > timeToMake)
+            //{
+            //    int numAsteroids = asteroids.Length;
+            //    int randIndex = Random.Range(0, numAsteroids - 1);
+
+            //    Transform asteroidTransform = this.transform;
+            //    Vector3 astPos =
+            //        new Vector3(transform.position.x + Random.RandomRange(-xradius, xradius), transform.position.y, transform.position.z);
+            //    GameObject newAsteroid = Instantiate(asteroids[randIndex], astPos, Quaternion.identity);
+            //    float xVel = speedX + Random.RandomRange(-speedVarianceX, speedVarianceX);
+            //    float yVel = speedY + Random.RandomRange(-speedVarianceY, speedVarianceY);
+            //    Vector3 asteroidVel = new Vector3(xVel, 0, yVel);
+            //    newAsteroid.GetComponent<Rigidbody>().velocity = asteroidVel;
+            //    newAsteroid.GetComponent<Rigidbody>().AddTorque(
+            //        Random.RandomRange(-torqueRange, torqueRange), Random.RandomRange(-torqueRange, torqueRange), Random.RandomRange(-torqueRange, torqueRange));
+            //    timeSinceLastMake = 0;
+            //    rb.asteroids.Add(newAsteroid.GetComponent<Asteroid>());
+            //}
+
             watch = Stopwatch.StartNew();
         }
 

@@ -311,28 +311,28 @@ namespace Photon.MmoDemo.Client
         {
             if (this.listener.IsDebugLogEnabled)
             {
-                var builder = new StringBuilder();
-                builder.AppendFormat("{0}: received ev3nt {1}:", this.avatar.Id, (EventCode)ev.Code);
+             //   var builder = new StringBuilder();
+              //  builder.AppendFormat("{0}: received ev3nt {1}:", this.avatar.Id, (EventCode)ev.Code);
                 foreach (var entry in ev.Parameters)
                 {
-                    builder.AppendFormat(" {0}=", (ParameterCode)entry.Key);
+                //    builder.AppendFormat(" {0}=", (ParameterCode)entry.Key);
                     if (entry.Value is float[])
                     {
-                        builder.Append("float[");
+              //          builder.Append("float[");
                         foreach (float number in (float[])entry.Value)
                         {
-                            builder.AppendFormat("{0:0.00},", number);
+             //               builder.AppendFormat("{0:0.00},", number);
                         }
 
-                        builder.Append("]");
+               //         builder.Append("]");
                     }
                     else
                     {
-                        builder.Append(entry.Value);
+               //         builder.Append(entry.Value);
                     }
                 }
 
-                this.listener.LogDebug(builder.ToString());
+           //     this.listener.LogDebug(builder.ToString());
             }
 
             this.OnEventReceive(ev);

@@ -73,7 +73,11 @@ namespace Photon.MmoDemo.Common
 
         StartSuperFast = 117,
 
-        EndSuperFast = 118
+        EndSuperFast = 118,
+
+        // once client has determined himself that he's destroyed an asteroid
+        // he lets the server know through this operation.
+        DestroyAsteroid = 119
 
 
     }

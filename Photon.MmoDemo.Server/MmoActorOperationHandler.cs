@@ -1786,12 +1786,12 @@ namespace Photon.MmoDemo.Server
 
                     float oneWayTripTime = ((float)roundTripTime / 1000f) / 2;
                     float watchElapsed = (float)watch.Elapsed.Milliseconds;
-               //     log.InfoFormat("blt trip time: {0} watch: {1}", oneWayTripTime.ToString(), watchElapsed.ToString());
+                    //     log.InfoFormat("blt trip time: {0} watch: {1}", oneWayTripTime.ToString(), watchElapsed.ToString());
                     // update bullet's position using it's velocity and the time elapsed (time for packet to get to server)
-                    Vector newPos = item.Position + item.Velocity * watchElapsed / 1000f;
+                    Vector newPos = item.Position + item.Velocity * oneWayTripTime;//watchElapsed / 1000f;
               //      log.InfoFormat("avpos:" + Avatar.Position.ToString());
               //      log.InfoFormat("newpos for bult:" + newPos.ToString());
-                    // + operation.Rotation * oneWayTripTime * GlobalVars.bulletSpeed;
+              // + operation.Rotation * oneWayTripTime * GlobalVars.bulletSpeed;
 
                     Vector bulletVelocity = item.Velocity + operation.Rotation * GlobalVars.bulletSpeed;
                //     log.InfoFormat("bvel " + bulletVelocity.ToString());
